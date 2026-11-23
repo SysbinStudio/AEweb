@@ -1,0 +1,2318 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sysbin 动画编辑器</title>
+    <style>
+        /* ============================================
+               GLOBAL RESET & DARK THEME
+               ============================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        :root {
+            --bg-primary: #1e1e1e;
+            --bg-panel: #252526;
+            --bg-input: #1a1a1c;
+            --accent: #007acc;
+            --accent-hover: #0098ff;
+            --text-primary: #cccccc;
+            --text-secondary: #999999;
+            --text-dim: #666666;
+            --border: #3c3c3c;
+            --border-light: #4a4a4a;
+            --warning: #dba110;
+            --selection: #007acc40;
+            --playhead: #ff4444;
+            --keyframe: #ffd700;
+            --track-even: #2a2a2c;
+            --track-odd: #222224;
+            --ruler-bg: #1e1e20;
+            --scroll-bg: #2a2a2c;
+            --font-mono: 'Consolas', 'Courier New', monospace;
+            --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+        html,
+        body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-ui);
+            font-size: 12px;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--scroll-bg);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+        /* ============================================
+               APP LAYOUT (Grid)
+               ============================================ */
+        #app {
+            display: grid;
+            grid-template-rows: 28px 1fr 180px;
+            grid-template-columns: 240px 1fr 220px;
+            grid-template-areas:
+                "menu menu menu"
+                "left center right"
+                "timeline timeline timeline";
+            height: 100vh;
+            width: 100vw;
+            background: var(--bg-primary);
+            overflow: hidden;
+        }
+        /* ============================================
+           TOP MENU BAR
+           ============================================ */
+        #top-menu {
+            grid-area: menu;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 6px;
+            flex-shrink: 0;
+            z-index: 100;
+        }
+        #top-menu .logo {
+            color: var(--accent);
+            font-weight: 600;
+            font-size: 13px;
+            margin-right: 16px;
+            letter-spacing: 0.3px;
+        }
+        #top-menu .logo span {
+            color: var(--text-secondary);
+            font-weight: 300;
+        }
+        #top-menu .menu-items {
+            display: flex;
+            gap: 2px;
+            flex: 1;
+        }
+        #top-menu .menu-items .mi {
+            padding: 3px 10px;
+            color: var(--text-secondary);
+            font-size: 11px;
+            cursor: pointer;
+            border-radius: 3px;
+            transition: background 0.1s;
+        }
+        #top-menu .menu-items .mi:hover {
+            background: #38383a;
+            color: var(--text-primary);
+        }
+        #top-menu .workspace-info {
+            color: var(--text-dim);
+            font-size: 10px;
+            padding: 0 10px;
+            border-left: 1px solid var(--border);
+            margin-left: auto;
+        }
+        /* ============================================
+           LEFT PANEL (Project & Info)
+           ============================================ */
+        #left-panel {
+            grid-area: left;
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-width: 0;
+        }
+        .panel-tabs {
+            display: flex;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            font-size: 10px;
+            flex-shrink: 0;
+        }
+        .panel-tabs .tab {
+            padding: 4px 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.1s;
+        }
+        .panel-tabs .tab.active {
+            color: var(--text-primary);
+            border-bottom-color: var(--accent);
+        }
+        .panel-tabs .tab:hover:not(.active) {
+            background: #2d2d30;
+        }
+        #project-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            font-size: 11px;
+            background: var(--bg-panel);
+        }
+        #project-panel .folder {
+            padding: 2px 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            border-left: 2px solid transparent;
+        }
+        #project-panel .folder:hover {
+            background: #2d2d30;
+        }
+        #project-panel .folder .icon {
+            color: #d4a017;
+        }
+        #project-panel .file {
+            padding: 2px 8px 2px 22px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+        }
+        #project-panel .file:hover {
+            background: #2d2d30;
+        }
+        #project-panel .file .icon {
+            font-size: 12px;
+            color: var(--accent);
+        }
+        #project-panel .import-btn {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 2px 8px;
+            font-size: 10px;
+            cursor: pointer;
+            border-radius: 3px;
+            margin: 4px 2px;
+            width: calc(100% - 4px);
+            text-align: center;
+        }
+        #project-panel .import-btn:hover {
+            background: var(--accent-hover);
+        }
+        #info-panel {
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+            padding: 4px 8px;
+            font-size: 10px;
+            color: var(--text-dim);
+            background: var(--bg-panel);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-height: 50px;
+        }
+        #info-panel .label {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        #info-panel .value {
+            color: var(--text-primary);
+        }
+        /* ============================================
+           CENTER VIEWPORT
+           ============================================ */
+        #center-viewport {
+            grid-area: center;
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            min-width: 0;
+            min-height: 0;
+        }
+        #viewport-toolbar {
+            display: flex;
+            align-items: center;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            padding: 2px 8px;
+            gap: 4px;
+            flex-shrink: 0;
+            height: 22px;
+            font-size: 10px;
+        }
+        #viewport-toolbar .tool {
+            padding: 1px 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+        #viewport-toolbar .tool:hover {
+            background: #2d2d30;
+            color: var(--text-primary);
+        }
+        #viewport-toolbar .tool.active {
+            background: var(--accent);
+            color: #fff;
+        }
+        #viewport-toolbar .sep {
+            width: 1px;
+            height: 14px;
+            background: var(--border);
+            margin: 0 6px;
+        }
+        #viewport-toolbar .zoom-indicator {
+            color: var(--text-secondary);
+            margin-left: 8px;
+            font-size: 10px;
+        }
+        #viewport-canvas-container {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            background: #1e1e1e;
+            cursor: default;
+        }
+        #viewport-canvas-container canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        /* ============================================
+           RIGHT PANEL (Effects & Align)
+           ============================================ */
+        #right-panel {
+            grid-area: right;
+            background: var(--bg-panel);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            min-width: 0;
+        }
+        #right-panel .section {
+            border-bottom: 1px solid var(--border);
+            padding: 4px 8px;
+        }
+        #right-panel .section-title {
+            font-size: 10px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            padding: 3px 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        #right-panel .section-title .arrow {
+            color: var(--text-dim);
+            font-size: 8px;
+        }
+        #right-panel .section-title:hover {
+            color: var(--text-primary);
+        }
+        #effects-panel .effect-item {
+            padding: 3px 4px;
+            font-size: 10px;
+            color: var(--text-dim);
+            border-radius: 2px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        #effects-panel .effect-item:hover {
+            background: #2d2d30;
+            color: var(--text-secondary);
+        }
+        #effects-panel .effect-item .icon {
+            font-size: 14px;
+            opacity: 0.6;
+        }
+        #align-panel .align-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2px;
+        }
+        #align-panel .align-buttons button {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 2px 6px;
+            font-size: 9px;
+            cursor: pointer;
+            border-radius: 2px;
+            font-family: var(--font-ui);
+        }
+        #align-panel .align-buttons button:hover {
+            background: #2d2d30;
+            border-color: var(--border-light);
+        }
+        /* ============================================
+           TIMELINE PANEL (Bottom)
+           ============================================ */
+        #timeline-panel {
+            grid-area: timeline;
+            background: var(--bg-panel);
+            border-top: 1px solid var(--border);
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            grid-template-rows: 28px 1fr;
+            grid-template-areas:
+                "tl-controls tl-controls"
+                "tl-stack tl-tracks";
+            height: 180px;
+            min-height: 120px;
+            resize: vertical;
+            overflow: hidden;
+        }
+        #timeline-controls {
+            grid-area: tl-controls;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 6px;
+            gap: 2px;
+            height: 28px;
+            flex-shrink: 0;
+        }
+        #timeline-controls .play-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 16px;
+            cursor: pointer;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-family: var(--font-ui);
+            transition: all 0.08s;
+        }
+        #timeline-controls .play-btn:hover {
+            background: #2d2d30;
+            color: var(--text-primary);
+        }
+        #timeline-controls .play-btn.active {
+            color: var(--accent);
+        }
+        #timeline-controls .time-display {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-primary);
+            background: var(--bg-input);
+            padding: 1px 6px;
+            border-radius: 2px;
+            margin-left: 4px;
+            min-width: 50px;
+            text-align: center;
+        }
+        #timeline-controls .transport-label {
+            color: var(--text-dim);
+            font-size: 9px;
+            margin-left: 2px;
+        }
+        #timeline-controls .loop-toggle {
+            padding: 2px 8px;
+            font-size: 12px;
+            cursor: pointer;
+            color: var(--text-dim);
+            border-radius: 3px;
+        }
+        #timeline-controls .loop-toggle:hover {
+            background: #2d2d30;
+            color: var(--text-secondary);
+        }
+        #timeline-controls .loop-toggle.on {
+            color: var(--accent);
+        }
+        #timeline-controls .export-btn {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 2px 8px;
+            font-size: 10px;
+            cursor: pointer;
+            border-radius: 3px;
+            margin-left: 4px;
+        }
+        #timeline-controls .export-btn:hover {
+            background: var(--accent-hover);
+        }
+        #timeline-controls .timeline-zoom {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            font-size: 9px;
+            color: var(--text-dim);
+        }
+        #timeline-controls .timeline-zoom input[type="range"] {
+            width: 60px;
+            height: 4px;
+            -webkit-appearance: none;
+            background: var(--border);
+            border-radius: 2px;
+            outline: none;
+        }
+        #timeline-controls .timeline-zoom input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+        }
+        #layer-stack {
+            grid-area: tl-stack;
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        #layer-stack .layer-row {
+            display: flex;
+            align-items: center;
+            padding: 1px 4px;
+            height: 22px;
+            font-size: 10px;
+            border-bottom: 1px solid var(--border);
+            gap: 2px;
+            cursor: pointer;
+            background: var(--track-odd);
+            transition: background 0.05s;
+        }
+        #layer-stack .layer-row:nth-child(even) {
+            background: var(--track-even);
+        }
+        #layer-stack .layer-row.selected {
+            background: #38383a;
+            border-left: 3px solid var(--accent);
+        }
+        #layer-stack .layer-row .vis-toggle,
+        #layer-stack .layer-row .audio-toggle,
+        #layer-stack .layer-row .solo-toggle,
+        #layer-stack .layer-row .lock-toggle {
+            width: 16px;
+            text-align: center;
+            font-size: 10px;
+            color: var(--text-dim);
+            cursor: pointer;
+            opacity: 0.5;
+            transition: opacity 0.1s;
+        }
+        #layer-stack .layer-row .vis-toggle.on,
+        #layer-stack .layer-row .audio-toggle.on,
+        #layer-stack .layer-row .solo-toggle.on {
+            opacity: 1;
+            color: var(--text-secondary);
+        }
+        #layer-stack .layer-row .lock-toggle.on {
+            opacity: 1;
+            color: var(--warning);
+        }
+        #layer-stack .layer-row .layer-name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding-left: 4px;
+            color: var(--text-primary);
+            font-weight: 400;
+        }
+        #layer-stack .layer-row .layer-type-badge {
+            font-size: 8px;
+            padding: 0 4px;
+            border-radius: 2px;
+            color: var(--text-dim);
+            background: var(--border);
+        }
+        #timeline-tracks-area {
+            grid-area: tl-tracks;
+            background: var(--bg-panel);
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        #timeline-ruler {
+            height: 22px;
+            background: var(--ruler-bg);
+            border-bottom: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        #timeline-ruler canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        #timeline-body {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: var(--bg-panel);
+        }
+        #timeline-body canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        #timeline-body .playhead-line {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--playhead);
+            pointer-events: none;
+            z-index: 20;
+            will-change: transform;
+            transform: translateX(0);
+            box-shadow: 0 0 4px var(--playhead);
+        }
+        /* ============================================
+           LAYER PROPERTIES PANEL (Contextual)
+           ============================================ */
+        #layer-properties {
+            background: var(--bg-panel);
+            border-top: 1px solid var(--border);
+            padding: 4px 8px;
+            display: none;
+            flex-direction: column;
+            gap: 2px;
+            font-size: 10px;
+            max-height: 120px;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+        #layer-properties.visible {
+            display: flex;
+        }
+        #layer-properties .prop-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 1px 0;
+        }
+        #layer-properties .prop-row .prop-label {
+            color: var(--text-secondary);
+            width: 52px;
+            font-size: 10px;
+            font-family: var(--font-mono);
+        }
+        #layer-properties .prop-row .prop-value {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 1px 4px;
+            border-radius: 2px;
+            width: 48px;
+            font-size: 10px;
+            font-family: var(--font-mono);
+            text-align: right;
+        }
+        #layer-properties .prop-row .prop-value:focus {
+            border-color: var(--accent);
+            outline: none;
+        }
+        #layer-properties .prop-row .stopwatch {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            border-radius: 50%;
+            background: transparent;
+            border: 1px solid var(--border);
+            font-size: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-dim);
+            transition: all 0.1s;
+        }
+        #layer-properties .prop-row .stopwatch.on {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+        #layer-properties .prop-row .stopwatch:hover {
+            background: #2d2d30;
+        }
+        #layer-properties .prop-row .keyframe-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--keyframe);
+            opacity: 0;
+            transition: opacity 0.1s;
+        }
+        #layer-properties .prop-row .keyframe-dot.visible {
+            opacity: 1;
+        }
+        #layer-properties .prop-row .lock-dim {
+            font-size: 9px;
+            color: var(--text-dim);
+            cursor: pointer;
+        }
+        /* ============================================
+           RESPONSIVE & UTILITY
+           ============================================ */
+        .hidden {
+            display: none !important;
+        }
+        .flex-center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .text-ellipsis {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        /* ============================================
+           CANVAS CURSOR OVERRIDES
+           ============================================ */
+        #viewport-canvas-container.dragging {
+            cursor: grabbing;
+        }
+        #viewport-canvas-container.panning {
+            cursor: grab;
+        }
+        #viewport-canvas-container .crosshair {
+            cursor: crosshair;
+        }
+        /* resize handle for timeline */
+        #timeline-panel .resize-handle {
+            position: absolute;
+            top: -3px;
+            left: 0;
+            right: 0;
+            height: 6px;
+            cursor: ns-resize;
+            z-index: 10;
+            background: transparent;
+        }
+        /* scrollbar overrides */
+        #layer-stack::-webkit-scrollbar,
+        #project-panel::-webkit-scrollbar,
+        #right-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+        #layer-stack::-webkit-scrollbar-track,
+        #project-panel::-webkit-scrollbar-track,
+        #right-panel::-webkit-scrollbar-track {
+            background: var(--scroll-bg);
+        }
+        #layer-stack::-webkit-scrollbar-thumb,
+        #project-panel::-webkit-scrollbar-thumb,
+        #right-panel::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+        /* hidden file input */
+        #import-media {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- ===== TOP MENU ===== -->
+        <header id="top-menu">
+            <div class="logo">Sysbin <span>动画编辑器</span></div>
+            <nav class="menu-items">
+                <span class="mi">文件</span><span class="mi">编辑</span><span class="mi">合成</span>
+                <span class="mi">图层</span><span class="mi">效果</span><span class="mi">动画</span>
+                <span class="mi">视图</span><span class="mi">窗口</span><span class="mi">帮助</span>
+            </nav>
+            <div class="workspace-info">未命名合成 • 1920×1080 • 30fps</div>
+        </header>
+
+        <!-- ===== LEFT PANEL ===== -->
+        <aside id="left-panel">
+            <div class="panel-tabs">
+                <span class="tab active">项目</span>
+                <span class="tab">信息</span>
+            </div>
+            <div id="project-panel">
+                <button class="import-btn" id="import-btn">📥 导入媒体</button>
+                <div class="folder"><span class="icon">📁</span> 合成</div>
+                <div class="file"><span class="icon">🎬</span> 合成 1</div>
+                <div class="folder"><span class="icon">📁</span> 素材</div>
+                <div class="file"><span class="icon">🖼️</span> background.png</div>
+                <div class="file"><span class="icon">🖼️</span> logo.svg</div>
+                <div class="folder"><span class="icon">📁</span> 输出</div>
+                <div style="padding:8px 4px;color:var(--text-dim);font-size:9px;">▲ 将素材拖入时间轴</div>
+            </div>
+            <div id="info-panel">
+                <div><span class="label">分辨率:</span> <span class="value">1920 × 1080</span></div>
+                <div><span class="label">帧率:</span> <span class="value">30 fps</span></div>
+                <div><span class="label">时长:</span> <span class="value">00:00:10</span></div>
+                <div><span class="label">光标位置:</span> <span class="value" id="cursor-coords">0, 0</span></div>
+            </div>
+        </aside>
+
+        <!-- ===== CENTER VIEWPORT ===== -->
+        <main id="center-viewport">
+            <div id="viewport-toolbar">
+                <span class="tool active">◀</span><span class="tool">▶</span>
+                <span class="sep"></span>
+                <span class="tool">⛶</span><span class="tool">⊞</span><span class="tool">⤡</span>
+                <span class="sep"></span>
+                <span class="tool">🔍</span>
+                <span class="zoom-indicator" id="zoom-indicator">100%</span>
+                <span style="margin-left:auto;color:var(--text-dim);font-size:9px;">合成: 合成 1</span>
+            </div>
+            <div id="viewport-canvas-container">
+                <canvas id="comp-canvas"></canvas>
+            </div>
+            <!-- Layer properties will appear below viewport when a layer is selected -->
+            <div id="layer-properties" class="visible">
+                <!-- populated dynamically -->
+            </div>
+        </main>
+
+        <!-- ===== RIGHT PANEL ===== -->
+        <aside id="right-panel">
+            <div class="section" id="effects-section">
+                <div class="section-title"><span class="arrow">▼</span> 效果 & 预设</div>
+                <div class="effect-item"><span class="icon">▣</span> 模糊</div>
+                <div class="effect-item"><span class="icon">◑</span> 投影</div>
+                <div class="effect-item"><span class="icon">◈</span> 发光</div>
+                <div class="effect-item"><span class="icon">▤</span> 渐变</div>
+                <div class="effect-item"><span class="icon">▦</span> 描边</div>
+            </div>
+            <div class="section" id="align-section">
+                <div class="section-title"><span class="arrow">▼</span> 对齐</div>
+                <div class="align-buttons">
+                    <button title="左对齐">⊣</button><button title="水平居中">⟂</button><button title="右对齐">⊢</button>
+                    <button title="顶对齐">⊤</button><button title="垂直居中">⟇</button><button title="底对齐">⊥</button>
+                    <button title="水平分布">⇔</button><button title="垂直分布">⇅</button>
+                </div>
+            </div>
+            <div class="section" style="border-bottom:none;">
+                <div class="section-title"><span class="arrow">▼</span> 属性</div>
+                <div style="padding:4px 0;font-size:10px;color:var(--text-dim);">选择一个图层开始编辑</div>
+            </div>
+        </aside>
+
+        <!-- ===== TIMELINE ===== -->
+        <div id="timeline-panel">
+            <div id="timeline-controls">
+                <button class="play-btn" id="play-btn" title="播放 (Space)">▶</button>
+                <button class="play-btn" id="stop-btn" title="停止">⏹</button>
+                <button class="play-btn" id="prev-frame-btn" title="上一帧">◀</button>
+                <button class="play-btn" id="next-frame-btn" title="下一帧">▶</button>
+                <span class="time-display" id="time-display">00:00</span>
+                <span class="transport-label" id="fps-label">30 fps</span>
+                <span class="loop-toggle" id="loop-toggle" title="循环播放">⟳</span>
+                <button class="export-btn" id="export-btn">📤 导出 WebM</button>
+                <div class="timeline-zoom">
+                    <span>−</span>
+                    <input type="range" id="timeline-zoom-slider" min="20" max="200" value="100" />
+                    <span>+</span>
+                </div>
+            </div>
+            <div id="layer-stack">
+                <!-- populated dynamically -->
+            </div>
+            <div id="timeline-tracks-area">
+                <div id="timeline-ruler"><canvas id="ruler-canvas"></canvas></div>
+                <div id="timeline-body">
+                    <canvas id="track-canvas"></canvas>
+                    <div class="playhead-line" id="playhead-line"></div>
+                </div>
+            </div>
+            <div class="resize-handle" id="timeline-resize-handle"></div>
+        </div>
+    </div>
+
+    <input type="file" id="import-media" accept="image/*,video/*" multiple />
+
+    <script>
+        /* ===========================================================
+               SYSBIN 动画编辑器 - 核心引擎
+               ===========================================================
+               架构说明:
+                 - Layer       : 图层数据模型
+                 - Composition : 管理图层、时间轴、播放
+                 - Renderer    : 绘制合成预览
+                 - TimelineUI  : 绘制标尺、轨道、播放头
+                 - App         : 全局控制器，处理事件
+               =========================================================== */
+
+        // ===========================================================
+        // 配置
+        // ===========================================================
+        const CONFIG = {
+            FPS: 30,
+            COMP_WIDTH: 1920,
+            COMP_HEIGHT: 1080,
+            DEFAULT_DURATION: 10, // 秒
+            TIMELINE_ZOOM_MIN: 20,
+            TIMELINE_ZOOM_MAX: 200,
+            PIXELS_PER_SECOND: 80, // 缩放100%时
+        };
+
+        // ===========================================================
+        // 工具函数
+        // ===========================================================
+        function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+        function lerp(a, b, t) { return a + (b - a) * t; }
+
+        function formatTime(seconds) {
+            const s = Math.floor(seconds);
+            const cs = Math.floor((seconds - s) * 100);
+            const m = Math.floor(s / 60);
+            const sec = s % 60;
+            return String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0') + ':' + String(cs).padStart(2, '0');
+        }
+
+        // ===========================================================
+        // 图层类
+        // ===========================================================
+        let _layerIdCounter = 0;
+
+        class Layer {
+            /**
+             * @param {string} type - 'solid' | 'text' | 'image' | 'video'
+             * @param {string} name
+             * @param {object} props
+             */
+            constructor(type, name, props = {}) {
+                this.id = ++_layerIdCounter;
+                this.type = type;
+                this.name = name || `${type} ${this.id}`;
+                // 变换属性
+                this.anchorX = props.anchorX || 0.5;
+                this.anchorY = props.anchorY || 0.5;
+                this.x = props.x || 0;
+                this.y = props.y || 0;
+                this.scaleX = props.scaleX || 1.0;
+                this.scaleY = props.scaleY || 1.0;
+                this.rotation = props.rotation || 0;
+                this.opacity = props.opacity || 1.0;
+                // 类型特定属性
+                this.color = props.color || '#4a90d9';
+                this.text = props.text || 'Hello World';
+                this.fontSize = props.fontSize || 48;
+                this.width = props.width || 200;
+                this.height = props.height || 120;
+                if (type === 'text') {
+                    this.width = props.width || 300;
+                    this.height = props.height || 60;
+                }
+                // 图片/视频数据
+                this.imageData = props.imageData || null; // 用于图片图层
+                this.videoElement = null; // 用于视频图层
+                // 关键帧: { 属性名: [ {time, value}, ... ] }
+                this.keyframes = {};
+                // 计时开关
+                this.stopwatch = {};
+                this._initStopwatches();
+                // 可见性等
+                this.visible = true;
+                this.locked = false;
+                this.solo = false;
+                this.audioOn = true;
+                this.selected = false;
+            }
+
+            _initStopwatches() {
+                const props = ['x', 'y', 'scaleX', 'scaleY', 'rotation', 'opacity'];
+                props.forEach(p => {
+                    this.stopwatch[p] = false;
+                    this.keyframes[p] = [];
+                });
+            }
+
+            toggleStopwatch(prop) {
+                if (this.stopwatch[prop] === undefined) return;
+                this.stopwatch[prop] = !this.stopwatch[prop];
+                if (this.stopwatch[prop]) {
+                    // 启用时在当前位置创建关键帧
+                }
+                return this.stopwatch[prop];
+            }
+
+            setKeyframe(prop, time, value) {
+                if (!this.keyframes[prop]) return;
+                const arr = this.keyframes[prop];
+                const idx = arr.findIndex(kf => Math.abs(kf.time - time) < 1 / CONFIG.FPS);
+                if (idx >= 0) {
+                    arr[idx].value = value;
+                } else {
+                    arr.push({ time: time, value: value });
+                    arr.sort((a, b) => a.time - b.time);
+                }
+            }
+
+            getValue(prop, time) {
+                if (!this.stopwatch[prop] || !this.keyframes[prop] || this.keyframes[prop].length === 0) {
+                    return this[prop];
+                }
+                const arr = this.keyframes[prop];
+                if (arr.length === 0) return this[prop];
+                if (time <= arr[0].time) return arr[0].value;
+                if (time >= arr[arr.length - 1].time) return arr[arr.length - 1].value;
+                let lo = 0,
+                    hi = arr.length - 1;
+                while (lo < hi - 1) {
+                    const mid = (lo + hi) / 2;
+                    if (arr[mid].time <= time) lo = mid;
+                    else hi = mid;
+                }
+                const a = arr[lo],
+                    b = arr[hi];
+                const t = (time - a.time) / (b.time - a.time);
+                return lerp(a.value, b.value, t);
+            }
+
+            setProp(prop, value, time) {
+                if (this[prop] === undefined) return;
+                this[prop] = value;
+                if (this.stopwatch[prop] && time !== undefined) {
+                    this.setKeyframe(prop, time, value);
+                }
+            }
+
+            getInterpolatedState(time) {
+                return {
+                    x: this.getValue('x', time),
+                    y: this.getValue('y', time),
+                    scaleX: this.getValue('scaleX', time),
+                    scaleY: this.getValue('scaleY', time),
+                    rotation: this.getValue('rotation', time),
+                    opacity: this.getValue('opacity', time),
+                    anchorX: this.anchorX,
+                    anchorY: this.anchorY,
+                    width: this.width,
+                    height: this.height,
+                    color: this.color,
+                    text: this.text,
+                    fontSize: this.fontSize,
+                    type: this.type,
+                    imageData: this.imageData,
+                    videoElement: this.videoElement,
+                };
+            }
+
+            clone() {
+                const l = new Layer(this.type, this.name + ' (副本)', {
+                    x: this.x + 20,
+                    y: this.y + 20,
+                    scaleX: this.scaleX,
+                    scaleY: this.scaleY,
+                    rotation: this.rotation,
+                    opacity: this.opacity,
+                    color: this.color,
+                    text: this.text,
+                    fontSize: this.fontSize,
+                    width: this.width,
+                    height: this.height,
+                    anchorX: this.anchorX,
+                    anchorY: this.anchorY,
+                    imageData: this.imageData,
+                });
+                l.visible = this.visible;
+                l.locked = this.locked;
+                Object.keys(this.keyframes).forEach(p => {
+                    l.keyframes[p] = this.keyframes[p].map(kf => ({ ...kf }));
+                    l.stopwatch[p] = this.stopwatch[p];
+                });
+                if (this.videoElement) {
+                    l.videoElement = this.videoElement; // 共享引用（简化）
+                }
+                return l;
+            }
+        }
+
+        // ===========================================================
+        // 合成类
+        // ===========================================================
+        class Composition {
+            constructor() {
+                this.layers = [];
+                this.duration = CONFIG.DEFAULT_DURATION;
+                this.fps = CONFIG.FPS;
+                this.width = CONFIG.COMP_WIDTH;
+                this.height = CONFIG.COMP_HEIGHT;
+                this.currentTime = 0;
+                this.isPlaying = false;
+                this.isLooping = false;
+                this.selectedLayerId = null;
+                this._addDefaultLayers();
+            }
+
+            _addDefaultLayers() {
+                const bg = new Layer('solid', '背景', {
+                    x: 0,
+                    y: 0,
+                    width: this.width,
+                    height: this.height,
+                    color: '#1a1a2e',
+                    scaleX: 1,
+                    scaleY: 1,
+                });
+                const txt = new Layer('text', '标题', {
+                    x: 200,
+                    y: 400,
+                    text: 'SYSBIN AE',
+                    fontSize: 72,
+                    color: '#ffffff',
+                    width: 500,
+                    height: 80,
+                });
+                const shape = new Layer('solid', '形状 1', {
+                    x: 300,
+                    y: 500,
+                    width: 160,
+                    height: 120,
+                    color: '#ff6b35',
+                    scaleX: 1,
+                    scaleY: 1,
+                });
+                shape.rotation = 15;
+                this.layers.push(bg, txt, shape);
+                this.selectedLayerId = txt.id;
+                txt.selected = true;
+            }
+
+            getLayer(id) { return this.layers.find(l => l.id === id); }
+
+            getSelectedLayer() { return this.selectedLayerId ? this.getLayer(this.selectedLayerId) : null; }
+
+            selectLayer(id) {
+                this.layers.forEach(l => l.selected = (l.id === id));
+                this.selectedLayerId = id;
+            }
+
+            addLayer(layer) {
+                this.layers.push(layer);
+                this.selectLayer(layer.id);
+                return layer;
+            }
+
+            removeLayer(id) {
+                const idx = this.layers.findIndex(l => l.id === id);
+                if (idx >= 0) {
+                    this.layers.splice(idx, 1);
+                    if (this.selectedLayerId === id) {
+                        this.selectedLayerId = this.layers.length > 0 ? this.layers[this.layers.length - 1].id : null;
+                        if (this.selectedLayerId) this.getLayer(this.selectedLayerId).selected = true;
+                    }
+                }
+            }
+
+            moveLayerUp(id) {
+                const idx = this.layers.findIndex(l => l.id === id);
+                if (idx > 0 && idx < this.layers.length) {
+                    [this.layers[idx], this.layers[idx - 1]] = [this.layers[idx - 1], this.layers[idx]];
+                }
+            }
+
+            moveLayerDown(id) {
+                const idx = this.layers.findIndex(l => l.id === id);
+                if (idx >= 0 && idx < this.layers.length - 1) {
+                    [this.layers[idx], this.layers[idx + 1]] = [this.layers[idx + 1], this.layers[idx]];
+                }
+            }
+
+            togglePlay() {
+                if (this.isPlaying) this.pause();
+                else this.play();
+            }
+
+            play() {
+                if (this.isPlaying) return;
+                this.isPlaying = true;
+                this.playStartTime = performance.now() / 1000 - this.currentTime;
+                this.lastTickTime = performance.now();
+            }
+
+            pause() { this.isPlaying = false; }
+
+            stop() {
+                this.isPlaying = false;
+                this.currentTime = 0;
+            }
+
+            toggleLoop() {
+                this.isLooping = !this.isLooping;
+                return this.isLooping;
+            }
+
+            tick(nowSeconds) {
+                if (!this.isPlaying) return;
+                const elapsed = nowSeconds - this.lastTickTime;
+                this.lastTickTime = nowSeconds;
+                this.currentTime += elapsed;
+                if (this.currentTime >= this.duration) {
+                    if (this.isLooping) {
+                        this.currentTime = 0;
+                        this.playStartTime = nowSeconds;
+                    } else {
+                        this.currentTime = this.duration;
+                        this.isPlaying = false;
+                    }
+                }
+                if (this.currentTime < 0) this.currentTime = 0;
+            }
+
+            setTime(t) { this.currentTime = clamp(t, 0, this.duration); }
+
+            getRenderOrder() { return this.layers.filter(l => l.visible); }
+        }
+
+        // ===========================================================
+        // 渲染器
+        // ===========================================================
+        class Renderer {
+            constructor(canvasEl, comp) {
+                this.canvas = canvasEl;
+                this.ctx = canvasEl.getContext('2d');
+                this.comp = comp;
+                this.zoom = 0.25;
+                this.panX = 0;
+                this.panY = 0;
+                this.viewportW = 0;
+                this.viewportH = 0;
+                this.needsRedraw = true;
+                this.showSafeMargins = true;
+            }
+
+            resize(w, h) {
+                this.viewportW = w;
+                this.viewportH = h;
+                this.canvas.width = w;
+                this.canvas.height = h;
+                const scaleX = w / this.comp.width;
+                const scaleY = h / this.comp.height;
+                this.zoom = Math.min(scaleX, scaleY) * 0.9;
+                this.panX = (w - this.comp.width * this.zoom) / 2;
+                this.panY = (h - this.comp.height * this.zoom) / 2;
+                this.needsRedraw = true;
+            }
+
+            screenToComp(sx, sy) {
+                return { x: (sx - this.panX) / this.zoom, y: (sy - this.panY) / this.zoom };
+            }
+
+            compToScreen(cx, cy) {
+                return { x: cx * this.zoom + this.panX, y: cy * this.zoom + this.panY };
+            }
+
+            draw(now) {
+                const ctx = this.ctx;
+                const w = this.viewportW;
+                const h = this.viewportH;
+                if (w === 0 || h === 0) return;
+
+                ctx.clearRect(0, 0, w, h);
+                this._drawCheckerboard(ctx, w, h);
+
+                ctx.save();
+                ctx.translate(this.panX, this.panY);
+                ctx.scale(this.zoom, this.zoom);
+
+                ctx.beginPath();
+                ctx.rect(0, 0, this.comp.width, this.comp.height);
+                ctx.clip();
+
+                // 合成背景
+                ctx.fillStyle = '#1a1a2e';
+                ctx.fillRect(0, 0, this.comp.width, this.comp.height);
+
+                if (this.showSafeMargins) this._drawSafeMargins(ctx);
+
+                const layers = this.comp.getRenderOrder();
+                const time = this.comp.currentTime;
+                layers.forEach(layer => this._drawLayer(ctx, layer, time));
+
+                const selected = this.comp.getSelectedLayer();
+                if (selected && selected.visible) this._drawSelectionHandles(ctx, selected, time);
+
+                ctx.restore();
+                this.needsRedraw = false;
+            }
+
+            _drawCheckerboard(ctx, w, h) {
+                const size = 12;
+                const cols = Math.ceil(w / size) + 1;
+                const rows = Math.ceil(h / size) + 1;
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        ctx.fillStyle = (r + c) % 2 === 0 ? '#3c3c3c' : '#252526';
+                        ctx.fillRect(c * size, r * size, size, size);
+                    }
+                }
+                ctx.strokeStyle = '#1e1e1e';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(0, 0, w, h);
+            }
+
+            _drawSafeMargins(ctx) {
+                const w = this.comp.width, h = this.comp.height;
+                ctx.save();
+                ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+                ctx.lineWidth = 1 / this.zoom;
+                ctx.setLineDash([4 / this.zoom, 4 / this.zoom]);
+                ctx.strokeRect(w * 0.05, h * 0.05, w * 0.9, h * 0.9);
+                ctx.strokeStyle = 'rgba(200,200,200,0.12)';
+                ctx.strokeRect(w * 0.1, h * 0.1, w * 0.8, h * 0.8);
+                ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+                ctx.setLineDash([2 / this.zoom, 6 / this.zoom]);
+                ctx.beginPath();
+                ctx.moveTo(w / 2, 0);
+                ctx.lineTo(w / 2, h);
+                ctx.moveTo(0, h / 2);
+                ctx.lineTo(w, h / 2);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            _drawLayer(ctx, layer, time) {
+                const state = layer.getInterpolatedState(time);
+                const opacity = clamp(state.opacity, 0, 1);
+                if (opacity <= 0) return;
+
+                ctx.save();
+                ctx.globalAlpha = opacity;
+
+                const cx = state.x, cy = state.y;
+                const sw = state.width * state.scaleX;
+                const sh = state.height * state.scaleY;
+
+                ctx.translate(cx, cy);
+                ctx.rotate(state.rotation * Math.PI / 180);
+                ctx.translate(-state.anchorX * state.width, -state.anchorY * state.height);
+                ctx.scale(state.scaleX, state.scaleY);
+
+                if (state.type === 'solid') {
+                    ctx.fillStyle = state.color;
+                    ctx.fillRect(0, 0, state.width, state.height);
+                    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+                    ctx.lineWidth = 1 / this.zoom;
+                    ctx.strokeRect(0, 0, state.width, state.height);
+                } else if (state.type === 'text') {
+                    ctx.fillStyle = state.color;
+                    ctx.font = `bold ${Math.max(12, state.fontSize)}px "Segoe UI", Arial, sans-serif`;
+                    ctx.textBaseline = 'top';
+                    ctx.textAlign = 'left';
+                    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+                    ctx.shadowBlur = 4 / this.zoom;
+                    ctx.shadowOffsetX = 1 / this.zoom;
+                    ctx.shadowOffsetY = 1 / this.zoom;
+                    ctx.fillText(state.text, 0, 0);
+                    ctx.shadowColor = 'transparent';
+                    ctx.shadowBlur = 0;
+                    ctx.fillStyle = state.color;
+                    ctx.fillText(state.text, 0, 0);
+                } else if (state.type === 'image' && state.imageData) {
+                    // 绘制图片
+                    const img = state.imageData;
+                    const aspect = img.width / img.height;
+                    var drawW = state.width;
+                    var drawH = state.height;
+                    // 保持比例适应图层尺寸
+                    if (drawW / drawH > aspect) { drawW = drawH * aspect; } else { drawH = drawW / aspect; }
+                    const offsetX = (state.width - drawW) / 2;
+                    const offsetY = (state.height - drawH) / 2;
+                    ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
+                    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+                    ctx.lineWidth = 0.5 / this.zoom;
+                    ctx.strokeRect(offsetX, offsetY, drawW, drawH);
+                } else if (state.type === 'video' && state.videoElement) {
+                    // 从视频元素捕获当前帧
+                    const vid = state.videoElement;
+                    if (vid && vid.readyState >= 2) {
+                        const aspect = vid.videoWidth / vid.videoHeight;
+                        var drawW2 = state.width;
+                        var drawH2 = state.height;
+                        if (drawW2 / drawH2 > aspect) { drawW2 = drawH2 * aspect; } else { drawH2 = drawW2 / aspect; }
+                        const ox = (state.width - drawW2) / 2;
+                        const oy = (state.height - drawH2) / 2;
+                        ctx.drawImage(vid, ox, oy, drawW2, drawH2);
+                        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+                        ctx.lineWidth = 0.5 / this.zoom;
+                        ctx.strokeRect(ox, oy, drawW2, drawH2);
+                    } else {
+                        // 占位符
+                        ctx.fillStyle = '#2a2a3e';
+                        ctx.fillRect(0, 0, state.width, state.height);
+                        ctx.fillStyle = '#888';
+                        ctx.font = `${Math.min(state.width, state.height) * 0.2}px Arial`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText('🎬', state.width / 2, state.height / 2);
+                    }
+                } else {
+                    // 未知类型占位符
+                    ctx.fillStyle = '#2a2a3e';
+                    ctx.fillRect(0, 0, state.width, state.height);
+                    ctx.fillStyle = '#888';
+                    ctx.font = `${Math.min(state.width, state.height) * 0.3}px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('?', state.width / 2, state.height / 2);
+                }
+
+                ctx.restore();
+            }
+
+            _drawSelectionHandles(ctx, layer, time) {
+                const state = layer.getInterpolatedState(time);
+                ctx.save();
+                const sw = state.width * state.scaleX;
+                const sh = state.height * state.scaleY;
+                const corners = [
+                    [state.x - state.anchorX * sw, state.y - state.anchorY * sh],
+                    [state.x - state.anchorX * sw + sw, state.y - state.anchorY * sh],
+                    [state.x - state.anchorX * sw + sw, state.y - state.anchorY * sh + sh],
+                    [state.x - state.anchorX * sw, state.y - state.anchorY * sh + sh],
+                ];
+                const cosR = Math.cos(state.rotation * Math.PI / 180);
+                const sinR = Math.sin(state.rotation * Math.PI / 180);
+                const rotCorners = corners.map(c => ({
+                    x: state.x + (c[0] - state.x) * cosR - (c[1] - state.y) * sinR,
+                    y: state.y + (c[0] - state.x) * sinR + (c[1] - state.y) * cosR,
+                }));
+
+                ctx.strokeStyle = '#00ccff';
+                ctx.lineWidth = 1.5 / this.zoom;
+                ctx.setLineDash([4 / this.zoom, 3 / this.zoom]);
+                ctx.beginPath();
+                rotCorners.forEach((c, i) => ctx[i === 0 ? 'moveTo' : 'lineTo'](c.x, c.y));
+                ctx.closePath();
+                ctx.stroke();
+
+                const handleSize = 6 / this.zoom;
+                ctx.fillStyle = '#00ccff';
+                rotCorners.forEach(c => ctx.fillRect(c.x - handleSize / 2, c.y - handleSize / 2, handleSize, handleSize));
+
+                ctx.fillStyle = '#ffcc00';
+                ctx.beginPath();
+                ctx.arc(state.x, state.y, 3 / this.zoom, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.strokeStyle = '#ffcc00';
+                ctx.lineWidth = 1 / this.zoom;
+                ctx.beginPath();
+                ctx.arc(state.x, state.y, 5 / this.zoom, 0, 2 * Math.PI);
+                ctx.stroke();
+
+                ctx.restore();
+            }
+
+            hitTest(sx, sy) {
+                const comp = this.screenToComp(sx, sy);
+                const time = this.comp.currentTime;
+                const layers = [...this.comp.getRenderOrder()].reverse();
+                for (const layer of layers) {
+                    if (!layer.visible) continue;
+                    const state = layer.getInterpolatedState(time);
+                    const sw = state.width * state.scaleX;
+                    const sh = state.height * state.scaleY;
+                    const cosR = Math.cos(-state.rotation * Math.PI / 180);
+                    const sinR = Math.sin(-state.rotation * Math.PI / 180);
+                    const dx = comp.x - state.x;
+                    const dy = comp.y - state.y;
+                    const localX = dx * cosR - dy * sinR + state.anchorX * state.width;
+                    const localY = dx * sinR + dy * cosR + state.anchorY * state.height;
+                    if (localX >= 0 && localX <= state.width && localY >= 0 && localY <= state.height) {
+                        return layer;
+                    }
+                }
+                return null;
+            }
+        }
+
+        // ===========================================================
+        // 时间轴 UI
+        // ===========================================================
+        class TimelineUI {
+            constructor(rulerCanvas, trackCanvas, comp, app) {
+                this.rulerCanvas = rulerCanvas;
+                this.rulerCtx = rulerCanvas.getContext('2d');
+                this.trackCanvas = trackCanvas;
+                this.trackCtx = trackCanvas.getContext('2d');
+                this.comp = comp;
+                this.app = app;
+                this.pixelsPerSecond = CONFIG.PIXELS_PER_SECOND;
+                this.offsetX = 0;
+                this.width = 0;
+                this.height = 0;
+                this.trackHeight = 22;
+                this.needsRedraw = true;
+            }
+
+            resize(w, h) {
+                this.width = w;
+                this.height = h;
+                this.rulerCanvas.width = w;
+                this.rulerCanvas.height = 22;
+                this.trackCanvas.width = w;
+                this.trackCanvas.height = h - 22;
+                this.needsRedraw = true;
+            }
+
+            getTotalWidth() { return this.comp.duration * this.pixelsPerSecond; }
+
+            timeToX(time) { return time * this.pixelsPerSecond - this.offsetX; }
+
+            xToTime(x) { return (x + this.offsetX) / this.pixelsPerSecond; }
+
+            draw(now) {
+                if (!this.needsRedraw) return;
+                const rctx = this.rulerCtx;
+                const tctx = this.trackCtx;
+                const rw = this.rulerCanvas.width;
+                const rh = this.rulerCanvas.height;
+                const tw = this.trackCanvas.width;
+                const th = this.trackCanvas.height;
+
+                // 标尺
+                rctx.clearRect(0, 0, rw, rh);
+                rctx.fillStyle = '#1e1e20';
+                rctx.fillRect(0, 0, rw, rh);
+                const startTime = Math.max(0, this.offsetX / this.pixelsPerSecond);
+                const endTime = Math.min(this.comp.duration, (this.offsetX + rw) / this.pixelsPerSecond);
+                rctx.strokeStyle = '#555555';
+                rctx.fillStyle = '#888888';
+                rctx.font = '9px monospace';
+                rctx.textBaseline = 'bottom';
+                rctx.textAlign = 'left';
+                for (let t = Math.floor(startTime); t <= endTime; t += 0.5) {
+                    const x = this.timeToX(t);
+                    if (x < -20 || x > rw + 20) continue;
+                    const isSec = Math.abs(t - Math.round(t)) < 0.01;
+                    rctx.lineWidth = isSec ? 1 : 0.5;
+                    rctx.strokeStyle = isSec ? '#666666' : '#444444';
+                    rctx.beginPath();
+                    rctx.moveTo(x, isSec ? 14 : 18);
+                    rctx.lineTo(x, 22);
+                    rctx.stroke();
+                    if (isSec && x + 20 < rw) {
+                        rctx.fillStyle = '#888888';
+                        rctx.fillText(formatTime(t).slice(0, 5), x + 2, 13);
+                    }
+                }
+                const phx = this.timeToX(this.comp.currentTime);
+                rctx.strokeStyle = '#ff4444';
+                rctx.lineWidth = 1.5;
+                rctx.beginPath();
+                rctx.moveTo(phx, 0);
+                rctx.lineTo(phx, 22);
+                rctx.stroke();
+                rctx.fillStyle = '#ff4444';
+                rctx.font = 'bold 9px monospace';
+                rctx.textAlign = 'center';
+                rctx.textBaseline = 'top';
+                rctx.fillText(formatTime(this.comp.currentTime), Math.min(Math.max(phx, 30), rw - 30), 2);
+
+                // 轨道
+                tctx.clearRect(0, 0, tw, th);
+                const layers = this.comp.layers;
+                const totalTrackH = layers.length * this.trackHeight;
+                tctx.fillStyle = '#1e1e20';
+                tctx.fillRect(0, 0, tw, th);
+                layers.forEach((layer, idx) => {
+                    const y = idx * this.trackHeight;
+                    tctx.fillStyle = (idx % 2 === 0) ? '#2a2a2c' : '#222224';
+                    tctx.fillRect(0, y, tw, this.trackHeight);
+                    if (layer.selected) {
+                        tctx.fillStyle = '#38383a';
+                        tctx.fillRect(0, y, tw, this.trackHeight);
+                    }
+                    tctx.fillStyle = layer.selected ? '#ffffff' : '#999999';
+                    tctx.font = '9px sans-serif';
+                    tctx.textBaseline = 'middle';
+                    tctx.textAlign = 'left';
+                    tctx.fillText(layer.name, 4, y + this.trackHeight / 2);
+                    const props = ['x', 'y', 'scaleX', 'scaleY', 'rotation', 'opacity'];
+                    props.forEach(prop => {
+                        if (!layer.stopwatch[prop] || layer.keyframes[prop].length === 0) return;
+                        layer.keyframes[prop].forEach(kf => {
+                            const kx = this.timeToX(kf.time);
+                            if (kx < -10 || kx > tw + 10) return;
+                            tctx.fillStyle = '#ffd700';
+                            tctx.beginPath();
+                            tctx.arc(kx, y + this.trackHeight / 2, 4, 0, 2 * Math.PI);
+                            tctx.fill();
+                            tctx.strokeStyle = '#aa8800';
+                            tctx.lineWidth = 0.5;
+                            tctx.stroke();
+                        });
+                    });
+                    const phx2 = this.timeToX(this.comp.currentTime);
+                    tctx.strokeStyle = 'rgba(255,68,68,0.3)';
+                    tctx.lineWidth = 1;
+                    tctx.beginPath();
+                    tctx.moveTo(phx2, 0);
+                    tctx.lineTo(phx2, th);
+                    tctx.stroke();
+                });
+                tctx.strokeStyle = '#3c3c3c';
+                tctx.lineWidth = 1;
+                tctx.beginPath();
+                tctx.moveTo(0, th - 0.5);
+                tctx.lineTo(tw, th - 0.5);
+                tctx.stroke();
+
+                this.needsRedraw = false;
+            }
+
+            screenXToTime(sx) { return this.xToTime(sx); }
+
+            trackAtY(sy) {
+                const idx = Math.floor(sy / this.trackHeight);
+                if (idx >= 0 && idx < this.comp.layers.length) return this.comp.layers[idx];
+                return null;
+            }
+        }
+
+        // ===========================================================
+        // 主应用类
+        // ===========================================================
+        class App {
+            constructor() {
+                this.comp = new Composition();
+
+                const canvasEl = document.getElementById('comp-canvas');
+                this.renderer = new Renderer(canvasEl, this.comp);
+
+                const rulerCanvas = document.getElementById('ruler-canvas');
+                const trackCanvas = document.getElementById('track-canvas');
+                this.timeline = new TimelineUI(rulerCanvas, trackCanvas, this.comp, this);
+
+                // DOM 引用
+                this.layerStackEl = document.getElementById('layer-stack');
+                this.layerPropsEl = document.getElementById('layer-properties');
+                this.timeDisplayEl = document.getElementById('time-display');
+                this.playBtnEl = document.getElementById('play-btn');
+                this.stopBtnEl = document.getElementById('stop-btn');
+                this.loopToggleEl = document.getElementById('loop-toggle');
+                this.zoomIndicatorEl = document.getElementById('zoom-indicator');
+                this.cursorCoordsEl = document.getElementById('cursor-coords');
+                this.playheadLineEl = document.getElementById('playhead-line');
+                this.timelineBodyEl = document.getElementById('timeline-body');
+                this.viewportContainer = document.getElementById('viewport-canvas-container');
+                this.importBtn = document.getElementById('import-btn');
+                this.importInput = document.getElementById('import-media');
+                this.exportBtn = document.getElementById('export-btn');
+
+                // 状态
+                this.isDraggingLayer = false;
+                this.dragStartX = 0;
+                this.dragStartY = 0;
+                this.dragLayerOrigX = 0;
+                this.dragLayerOrigY = 0;
+                this.dragLayer = null;
+                this.isDraggingPlayhead = false;
+                this.isPanning = false;
+                this.panStartX = 0;
+                this.panStartY = 0;
+                this.panOrigX = 0;
+                this.panOrigY = 0;
+                this.lastFrameTime = 0;
+                this.exporting = false;
+
+                this._initUI();
+                this._initEvents();
+                this._updateLayerStack();
+                this._updateLayerProperties();
+                this._resizeAll();
+                this._startLoop();
+                console.log('Sysbin 动画编辑器 已启动');
+            }
+
+            _initUI() {
+                this.loopToggleEl.classList.toggle('on', this.comp.isLooping);
+                this._updateTimeDisplay();
+            }
+
+            _initEvents() {
+                // 视口事件
+                const viewport = this.viewportContainer;
+                viewport.addEventListener('mousedown', (e) => this._onViewportMouseDown(e));
+                viewport.addEventListener('mousemove', (e) => this._onViewportMouseMove(e));
+                viewport.addEventListener('mouseup', (e) => this._onViewportMouseUp(e));
+                viewport.addEventListener('mouseleave', (e) => this._onViewportMouseUp(e));
+                viewport.addEventListener('dblclick', (e) => this._onViewportDblClick(e));
+
+                // 时间轴
+                const timelineBody = this.timelineBodyEl;
+                timelineBody.addEventListener('mousedown', (e) => this._onTimelineMouseDown(e));
+                timelineBody.addEventListener('mousemove', (e) => this._onTimelineMouseMove(e));
+                timelineBody.addEventListener('mouseup', (e) => this._onTimelineMouseUp(e));
+                timelineBody.addEventListener('mouseleave', (e) => this._onTimelineMouseUp(e));
+
+                const rulerEl = document.getElementById('timeline-ruler');
+                rulerEl.addEventListener('mousedown', (e) => this._onRulerClick(e));
+
+                // 播放控制
+                this.playBtnEl.addEventListener('click', () => {
+                    this.comp.togglePlay();
+                    this.playBtnEl.textContent = this.comp.isPlaying ? '⏸' : '▶';
+                    this.playBtnEl.classList.toggle('active', this.comp.isPlaying);
+                });
+                this.stopBtnEl.addEventListener('click', () => {
+                    this.comp.stop();
+                    this.playBtnEl.textContent = '▶';
+                    this.playBtnEl.classList.remove('active');
+                    this._updateTimeDisplay();
+                    this._requestRedraw();
+                });
+                document.getElementById('prev-frame-btn').addEventListener('click', () => {
+                    this.comp.setTime(Math.max(0, this.comp.currentTime - 1 / CONFIG.FPS));
+                    this._updateTimeDisplay();
+                    this._requestRedraw();
+                });
+                document.getElementById('next-frame-btn').addEventListener('click', () => {
+                    this.comp.setTime(Math.min(this.comp.duration, this.comp.currentTime + 1 / CONFIG.FPS));
+                    this._updateTimeDisplay();
+                    this._requestRedraw();
+                });
+                this.loopToggleEl.addEventListener('click', () => {
+                    this.comp.toggleLoop();
+                    this.loopToggleEl.classList.toggle('on', this.comp.isLooping);
+                });
+
+                // 导入媒体
+                this.importBtn.addEventListener('click', () => this.importInput.click());
+                this.importInput.addEventListener('change', (e) => this._onImportMedia(e));
+
+                // 导出 WebM
+                this.exportBtn.addEventListener('click', () => this._exportWebM());
+
+                // 图层堆叠
+                this.layerStackEl.addEventListener('click', (e) => this._onLayerStackClick(e));
+
+                // 键盘
+                document.addEventListener('keydown', (e) => this._onKeyDown(e));
+
+                // 时间轴缩放
+                document.getElementById('timeline-zoom-slider').addEventListener('input', (e) => {
+                    const val = parseInt(e.target.value);
+                    this.timeline.pixelsPerSecond = CONFIG.PIXELS_PER_SECOND * (val / 100);
+                    this.timeline.needsRedraw = true;
+                    this._updatePlayheadPosition();
+                    this._requestRedraw();
+                });
+
+                // 窗口尺寸调整
+                setInterval(() => this._resizeAll(), 500);
+
+                // 图层属性更改
+                this.layerPropsEl.addEventListener('change', (e) => this._onPropChange(e));
+                this.layerPropsEl.addEventListener('input', (e) => this._onPropChange(e));
+
+                // 时间轴大小调整手柄
+                const resizeHandle = document.getElementById('timeline-resize-handle');
+                let isResizing = false;
+                let startY = 0;
+                let startH = 180;
+                resizeHandle.addEventListener('mousedown', (e) => {
+                    isResizing = true;
+                    startY = e.clientY;
+                    startH = parseInt(document.getElementById('timeline-panel').style.height) || 180;
+                    e.preventDefault();
+                });
+                document.addEventListener('mousemove', (e) => {
+                    if (!isResizing) return;
+                    const delta = e.clientY - startY;
+                    const newH = clamp(startH - delta, 80, 400);
+                    document.getElementById('timeline-panel').style.height = newH + 'px';
+                    this._resizeAll();
+                });
+                document.addEventListener('mouseup', () => { isResizing = false; });
+            }
+
+            _resizeAll() {
+                const container = this.viewportContainer;
+                const w = container.clientWidth || 800;
+                const h = container.clientHeight || 400;
+                if (w > 0 && h > 0) this.renderer.resize(w, h);
+
+                const timelineBody = this.timelineBodyEl;
+                const tbw = timelineBody.clientWidth || 600;
+                const tbh = timelineBody.clientHeight || 120;
+                if (tbw > 0 && tbh > 0) this.timeline.resize(tbw, tbh + 22);
+
+                const rulerEl = document.getElementById('timeline-ruler');
+                if (rulerEl && tbw > 0) rulerEl.style.width = tbw + 'px';
+
+                this._requestRedraw();
+            }
+
+            _startLoop() {
+                const loop = (now) => {
+                    if (this.comp.isPlaying) {
+                        const seconds = now / 1000;
+                        this.comp.tick(seconds);
+                        this._updateTimeDisplay();
+                        this._updatePlayheadPosition();
+                        this._updateLayerProperties();
+                        // 更新视频图层的时间
+                        this.comp.layers.forEach(layer => {
+                            if (layer.type === 'video' && layer.videoElement && layer.videoElement.readyState >= 2) {
+                                // 将视频定位到合成时间
+                                try {
+                                    layer.videoElement.currentTime = this.comp.currentTime;
+                                } catch (e) { /* 忽略 */ }
+                            }
+                        });
+                    }
+                    if (this.renderer.needsRedraw || this.comp.isPlaying || this.exporting) {
+                        this.renderer.draw(now);
+                    }
+                    if (this.timeline.needsRedraw || this.comp.isPlaying) {
+                        this.timeline.draw(now);
+                    }
+                    requestAnimationFrame(loop);
+                };
+                this.lastFrameTime = performance.now();
+                requestAnimationFrame(loop);
+            }
+
+            _requestRedraw() {
+                this.renderer.needsRedraw = true;
+                this.timeline.needsRedraw = true;
+            }
+
+            _updateTimeDisplay() {
+                this.timeDisplayEl.textContent = formatTime(this.comp.currentTime);
+            }
+
+            _updatePlayheadPosition() {
+                const phx = this.timeline.timeToX(this.comp.currentTime);
+                this.playheadLineEl.style.transform = `translateX(${phx}px)`;
+                this.timeline.needsRedraw = true;
+            }
+
+            _updateLayerStack() {
+                const el = this.layerStackEl;
+                el.innerHTML = '';
+                this.comp.layers.forEach((layer, idx) => {
+                    const row = document.createElement('div');
+                    row.className = 'layer-row' + (layer.selected ? ' selected' : '');
+                    row.dataset.layerId = layer.id;
+                    row.innerHTML = `
+                        <span class="vis-toggle ${layer.visible ? 'on' : ''}" data-toggle="vis">👁</span>
+                        <span class="audio-toggle ${layer.audioOn ? 'on' : ''}" data-toggle="audio">🔊</span>
+                        <span class="solo-toggle ${layer.solo ? 'on' : ''}" data-toggle="solo">◎</span>
+                        <span class="lock-toggle ${layer.locked ? 'on' : ''}" data-toggle="lock">🔒</span>
+                        <span class="layer-type-badge">${layer.type[0].toUpperCase()}</span>
+                        <span class="layer-name">${layer.name}</span>
+                    `;
+                    if (layer.selected) {
+                        row.style.borderLeft = '3px solid var(--accent)';
+                        row.style.background = '#38383a';
+                    } else {
+                        row.style.background = (idx % 2 === 0) ? '#2a2a2c' : '#222224';
+                    }
+                    el.appendChild(row);
+                });
+                el.querySelectorAll('.vis-toggle, .audio-toggle, .solo-toggle, .lock-toggle').forEach(el => {
+                    el.addEventListener('click', (e) => {
+                        const row = e.target.closest('.layer-row');
+                        const id = parseInt(row.dataset.layerId);
+                        const layer = this.comp.getLayer(id);
+                        if (!layer) return;
+                        const toggle = e.target.dataset.toggle;
+                        switch (toggle) {
+                            case 'vis':
+                                layer.visible = !layer.visible;
+                                break;
+                            case 'audio':
+                                layer.audioOn = !layer.audioOn;
+                                break;
+                            case 'solo':
+                                layer.solo = !layer.solo;
+                                break;
+                            case 'lock':
+                                layer.locked = !layer.locked;
+                                break;
+                        }
+                        this._updateLayerStack();
+                        this._requestRedraw();
+                    });
+                });
+            }
+
+            _updateLayerProperties() {
+                const layer = this.comp.getSelectedLayer();
+                const el = this.layerPropsEl;
+                if (!layer) {
+                    el.className = 'hidden';
+                    return;
+                }
+                el.className = 'visible';
+                const time = this.comp.currentTime;
+                const vals = {
+                    x: Math.round(layer.getValue('x', time)),
+                    y: Math.round(layer.getValue('y', time)),
+                    scaleX: Math.round(layer.getValue('scaleX', time) * 100),
+                    scaleY: Math.round(layer.getValue('scaleY', time) * 100),
+                    rotation: Math.round(layer.getValue('rotation', time) * 10) / 10,
+                    opacity: Math.round(layer.getValue('opacity', time) * 100),
+                };
+                const props = [
+                    { prop: 'x', label: 'X 位置', value: vals.x, suffix: '' },
+                    { prop: 'y', label: 'Y 位置', value: vals.y, suffix: '' },
+                    { prop: 'scaleX', label: '缩放 X', value: vals.scaleX, suffix: '%' },
+                    { prop: 'scaleY', label: '缩放 Y', value: vals.scaleY, suffix: '%' },
+                    { prop: 'rotation', label: '旋转', value: vals.rotation, suffix: '°' },
+                    { prop: 'opacity', label: '不透明度', value: vals.opacity, suffix: '%' },
+                ];
+                let html =
+                    `<div style="display:flex;align-items:center;gap:6px;padding:2px 0;font-size:10px;color:var(--text-secondary);">
+                        <span style="font-weight:600;">${layer.name}</span>
+                        <span style="color:var(--text-dim);">(${layer.type})</span>
+                        <span style="margin-left:auto;font-size:9px;color:var(--text-dim);">锚点: ${Math.round(layer.anchorX*100)}%, ${Math.round(layer.anchorY*100)}%</span>
+                    </div>`;
+                props.forEach(p => {
+                    const swOn = layer.stopwatch[p.prop];
+                    const hasKF = layer.keyframes[p.prop] && layer.keyframes[p.prop].length > 0;
+                    html += `<div class="prop-row">
+                        <span class="prop-label">${p.label}</span>
+                        <input type="number" class="prop-value" data-prop="${p.prop}" value="${p.value}" step="${p.prop === 'opacity' ? 1 : (p.prop === 'rotation' ? 0.5 : 1)}" />
+                        <span class="prop-suffix" style="color:var(--text-dim);font-size:9px;width:14px;">${p.suffix}</span>
+                        <span class="stopwatch ${swOn ? 'on' : ''}" data-prop="${p.prop}" title="开启关键帧">⏱</span>
+                        <span class="keyframe-dot ${(swOn && hasKF) ? 'visible' : ''}" style="${(swOn && hasKF) ? 'opacity:1;' : ''}"></span>
+                    </div>`;
+                });
+                el.innerHTML = html;
+
+                el.querySelectorAll('.stopwatch').forEach(el => {
+                    el.addEventListener('click', (e) => {
+                        const prop = e.target.dataset.prop;
+                        const layer = this.comp.getSelectedLayer();
+                        if (!layer) return;
+                        const wasOn = layer.stopwatch[prop];
+                        layer.toggleStopwatch(prop);
+                        if (!wasOn) {
+                            const time = this.comp.currentTime;
+                            const val = layer[prop];
+                            layer.setKeyframe(prop, time, val);
+                        }
+                        this._updateLayerProperties();
+                        this._updateLayerStack();
+                        this._requestRedraw();
+                    });
+                });
+
+                el.querySelectorAll('.prop-value').forEach(input => {
+                    input.addEventListener('change', (e) => {
+                        const prop = e.target.dataset.prop;
+                        const layer = this.comp.getSelectedLayer();
+                        if (!layer) return;
+                        const val = parseFloat(e.target.value);
+                        if (isNaN(val)) return;
+                        let realVal = val;
+                        if (prop === 'scaleX' || prop === 'scaleY') realVal = val / 100;
+                        if (prop === 'opacity') realVal = val / 100;
+                        if (prop === 'rotation') realVal = val;
+                        layer.setProp(prop, realVal, this.comp.currentTime);
+                        this._updateLayerProperties();
+                        this._updateLayerStack();
+                        this._requestRedraw();
+                    });
+                    input.addEventListener('input', (e) => {
+                        const prop = e.target.dataset.prop;
+                        const layer = this.comp.getSelectedLayer();
+                        if (!layer) return;
+                        const val = parseFloat(e.target.value);
+                        if (isNaN(val)) return;
+                        let realVal = val;
+                        if (prop === 'scaleX' || prop === 'scaleY') realVal = val / 100;
+                        if (prop === 'opacity') realVal = val / 100;
+                        if (prop === 'rotation') realVal = val;
+                        layer.setProp(prop, realVal, this.comp.currentTime);
+                        this._requestRedraw();
+                    });
+                });
+            }
+
+            // ---- 导入媒体 ----
+            _onImportMedia(e) {
+                const files = Array.from(e.target.files);
+                files.forEach(file => {
+                    const url = URL.createObjectURL(file);
+                    if (file.type.startsWith('image/')) {
+                        const img = new Image();
+                        img.src = url;
+                        img.onload = () => {
+                            const layer = new Layer('image', file.name, {
+                                x: 100,
+                                y: 100,
+                                width: img.width,
+                                height: img.height,
+                                imageData: img,
+                                scaleX: Math.min(1, 300 / img.width),
+                                scaleY: Math.min(1, 200 / img.height),
+                            });
+                            this.comp.addLayer(layer);
+                            this._updateLayerStack();
+                            this._updateLayerProperties();
+                            this._requestRedraw();
+                        };
+                        img.onerror = () => {
+                            // 若图片加载失败，使用占位符
+                            const layer = new Layer('image', file.name, {
+                                x: 100,
+                                y: 100,
+                                width: 200,
+                                height: 150,
+                                imageData: null,
+                            });
+                            this.comp.addLayer(layer);
+                            this._updateLayerStack();
+                            this._updateLayerProperties();
+                            this._requestRedraw();
+                        };
+                    } else if (file.type.startsWith('video/')) {
+                        // 创建视频图层
+                        const vid = document.createElement('video');
+                        vid.src = url;
+                        vid.loop = true;
+                        vid.load();
+                        vid.onloadeddata = () => {
+                            // 当视频准备好时
+                            const layer = new Layer('video', file.name, {
+                                x: 100,
+                                y: 100,
+                                width: 320,
+                                height: 240,
+                                videoElement: vid,
+                                scaleX: 1,
+                                scaleY: 1,
+                            });
+                            this.comp.addLayer(layer);
+                            this._updateLayerStack();
+                            this._updateLayerProperties();
+                            this._requestRedraw();
+                        };
+                        vid.onerror = () => {
+                            // 若视频加载失败，使用占位符
+                            const layer = new Layer('video', file.name, {
+                                x: 100,
+                                y: 100,
+                                width: 320,
+                                height: 240,
+                                videoElement: null,
+                            });
+                            this.comp.addLayer(layer);
+                            this._updateLayerStack();
+                            this._updateLayerProperties();
+                            this._requestRedraw();
+                        };
+                        // 为了简化，我们直接假设加载成功
+                        // 注意：在实际中可能需要等待元数据
+                    } else {
+                        // 不支持的文件类型
+                        console.log('不支持的文件类型');
+                    }
+                });
+                // 重置 input 以便重复导入
+                e.target.value = '';
+            }
+
+            // ---- 导出 WebM ----
+            async _exportWebM() {
+                if (this.exporting) return;
+                this.exporting = true;
+                this.exportBtn.textContent = '⏳ 导出中...';
+                this.exportBtn.disabled = true;
+
+                try {
+                    // 暂停播放
+                    const wasPlaying = this.comp.isPlaying;
+                    if (wasPlaying) this.comp.pause();
+
+                    const fps = CONFIG.FPS;
+                    const totalFrames = Math.ceil(this.comp.duration * fps);
+                    const canvas = this.renderer.canvas;
+                    const ctx = this.renderer.ctx;
+
+                    // 检查浏览器是否支持 captureStream
+                    if (typeof canvas.captureStream === 'function') {
+                        // 使用 MediaRecorder + captureStream
+                        const stream = canvas.captureStream(fps);
+                        const recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+                        const chunks = [];
+                        recorder.ondataavailable = (e) => {
+                            if (e.data.size > 0) chunks.push(e.data);
+                        };
+                        recorder.onstop = () => {
+                            const blob = new Blob(chunks, { type: 'video/webm' });
+                            const downloadUrl = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = downloadUrl;
+                            a.download = 'export.webm';
+                            a.click();
+                            URL.revokeObjectURL(downloadUrl);
+                            this.exporting = false;
+                            this.exportBtn.textContent = '📤 导出 WebM';
+                            this.exportBtn.disabled = false;
+                            if (wasPlaying) this.comp.play();
+                        };
+                        recorder.start();
+
+                        // 渲染所有帧
+                        for (let i = 0; i < totalFrames; i++) {
+                            const time = i / fps;
+                            this.comp.setTime(time);
+                            this.renderer.needsRedraw = true;
+                            this.renderer.draw(performance.now());
+                            // 等待一帧的时间 (实际录制速率由 captureStream 控制)
+                            await new Promise(resolve => setTimeout(resolve, 1000 / fps / 2));
+                        }
+
+                        recorder.stop();
+                    } else {
+                        // 降级方案：导出一系列 PNG 帧并提示
+                        alert('您的浏览器不支持 direct WebM 录制。\n我们将导出一个包含所有帧的 ZIP 文件。');
+                        // 创建 ZIP（简单实现，仅包含最后一帧）
+                        const dataUrl = canvas.toDataURL('image/png');
+                        const blob = await (await fetch(dataUrl)).blob();
+                        const link = document.createElement('a');
+                        link.href = URL.createObjectURL(blob);
+                        link.download = 'frame.png';
+                        link.click();
+                        this.exporting = false;
+                        this.exportBtn.textContent = '📤 导出 WebM';
+                        this.exportBtn.disabled = false;
+                        if (wasPlaying) this.comp.play();
+                    }
+                } catch (err) {
+                    console.error('导出失败:', err);
+                    alert('导出失败: ' + err.message);
+                    this.exporting = false;
+                    this.exportBtn.textContent = '📤 导出 WebM';
+                    this.exportBtn.disabled = false;
+                }
+            }
+
+            // ---- 事件处理 ----
+            _onViewportMouseDown(e) {
+                const rect = this.viewportContainer.getBoundingClientRect();
+                const mx = e.clientX - rect.left;
+                const my = e.clientY - rect.top;
+
+                const layer = this.renderer.hitTest(mx, my);
+                if (layer) {
+                    this.comp.selectLayer(layer.id);
+                    this._updateLayerStack();
+                    this._updateLayerProperties();
+                    this._requestRedraw();
+                    if (!layer.locked) {
+                        this.isDraggingLayer = true;
+                        this.dragStartX = mx;
+                        this.dragStartY = my;
+                        this.dragLayerOrigX = layer.x;
+                        this.dragLayerOrigY = layer.y;
+                        this.dragLayer = layer;
+                        e.preventDefault();
+                    }
+                } else {
+                    this.isPanning = true;
+                    this.panStartX = mx;
+                    this.panStartY = my;
+                    this.panOrigX = this.renderer.panX;
+                    this.panOrigY = this.renderer.panY;
+                    e.preventDefault();
+                }
+            }
+
+            _onViewportMouseMove(e) {
+                const rect = this.viewportContainer.getBoundingClientRect();
+                const mx = e.clientX - rect.left;
+                const my = e.clientY - rect.top;
+                const compCoords = this.renderer.screenToComp(mx, my);
+                this.cursorCoordsEl.textContent = `${Math.round(compCoords.x)}, ${Math.round(compCoords.y)}`;
+
+                if (this.isDraggingLayer && this.dragLayer) {
+                    const dx = (mx - this.dragStartX) / this.renderer.zoom;
+                    const dy = (my - this.dragStartY) / this.renderer.zoom;
+                    const newX = this.dragLayerOrigX + dx;
+                    const newY = this.dragLayerOrigY + dy;
+                    this.dragLayer.setProp('x', newX, this.comp.currentTime);
+                    this.dragLayer.setProp('y', newY, this.comp.currentTime);
+                    this._updateLayerProperties();
+                    this._requestRedraw();
+                } else if (this.isPanning) {
+                    const dx = mx - this.panStartX;
+                    const dy = my - this.panStartY;
+                    this.renderer.panX = this.panOrigX + dx;
+                    this.renderer.panY = this.panOrigY + dy;
+                    this._requestRedraw();
+                } else {
+                    const layer = this.renderer.hitTest(mx, my);
+                    this.viewportContainer.style.cursor = layer ? 'pointer' : 'default';
+                }
+            }
+
+            _onViewportMouseUp(e) {
+                if (this.isDraggingLayer) { this.isDraggingLayer = false;
+                    this.dragLayer = null; }
+                if (this.isPanning) { this.isPanning = false; }
+            }
+
+            _onViewportDblClick(e) { /* 预留 */ }
+
+            _onTimelineMouseDown(e) {
+                const rect = this.timelineBodyEl.getBoundingClientRect();
+                const my = e.clientY - rect.top;
+                const mx = e.clientX - rect.left;
+                const phx = this.timeline.timeToX(this.comp.currentTime);
+                if (Math.abs(mx - phx) < 8) {
+                    this.isDraggingPlayhead = true;
+                    e.preventDefault();
+                    return;
+                }
+                const layer = this.timeline.trackAtY(my);
+                if (layer) {
+                    this.comp.selectLayer(layer.id);
+                    this._updateLayerStack();
+                    this._updateLayerProperties();
+                    this._requestRedraw();
+                    const time = clamp(this.timeline.xToTime(mx), 0, this.comp.duration);
+                    this.comp.setTime(time);
+                    this._updateTimeDisplay();
+                    this._updatePlayheadPosition();
+                    this._updateLayerProperties();
+                    this._requestRedraw();
+                }
+            }
+
+            _onTimelineMouseMove(e) {
+                if (!this.isDraggingPlayhead) return;
+                const rect = this.timelineBodyEl.getBoundingClientRect();
+                const mx = e.clientX - rect.left;
+                const time = clamp(this.timeline.xToTime(mx), 0, this.comp.duration);
+                this.comp.setTime(time);
+                this._updateTimeDisplay();
+                this._updatePlayheadPosition();
+                this._updateLayerProperties();
+                this._requestRedraw();
+            }
+
+            _onTimelineMouseUp(e) { this.isDraggingPlayhead = false; }
+
+            _onRulerClick(e) {
+                const rect = document.getElementById('timeline-ruler').getBoundingClientRect();
+                const mx = e.clientX - rect.left;
+                const time = clamp(this.timeline.xToTime(mx), 0, this.comp.duration);
+                this.comp.setTime(time);
+                this._updateTimeDisplay();
+                this._updatePlayheadPosition();
+                this._updateLayerProperties();
+                this._requestRedraw();
+            }
+
+            _onLayerStackClick(e) {
+                const row = e.target.closest('.layer-row');
+                if (!row) return;
+                const id = parseInt(row.dataset.layerId);
+                const layer = this.comp.getLayer(id);
+                if (layer) {
+                    this.comp.selectLayer(id);
+                    this._updateLayerStack();
+                    this._updateLayerProperties();
+                    this._requestRedraw();
+                }
+            }
+
+            _onKeyDown(e) {
+                if (e.key === ' ') {
+                    e.preventDefault();
+                    this.playBtnEl.click();
+                }
+                if (e.key === 'Delete' || e.key === 'Backspace') {
+                    const layer = this.comp.getSelectedLayer();
+                    if (layer && layer.id !== this.comp.layers[0].id) {
+                        this.comp.removeLayer(layer.id);
+                        this._updateLayerStack();
+                        this._updateLayerProperties();
+                        this._requestRedraw();
+                    }
+                }
+                if (e.ctrl && e.key === 'd') {
+                    e.preventDefault();
+                    const layer = this.comp.getSelectedLayer();
+                    if (layer) {
+                        const clone = layer.clone();
+                        this.comp.addLayer(clone);
+                        this._updateLayerStack();
+                        this._updateLayerProperties();
+                        this._requestRedraw();
+                    }
+                }
+                if (e.key === 'ArrowUp') {
+                    const layer = this.comp.getSelectedLayer();
+                    if (layer) { this.comp.moveLayerUp(layer.id);
+                        this._updateLayerStack();
+                        this._requestRedraw(); }
+                    e.preventDefault();
+                }
+                if (e.key === 'ArrowDown') {
+                    const layer = this.comp.getSelectedLayer();
+                    if (layer) { this.comp.moveLayerDown(layer.id);
+                        this._updateLayerStack();
+                        this._requestRedraw(); }
+                    e.preventDefault();
+                }
+            }
+
+            _onPropChange(e) { /* 已在上层处理 */ }
+        }
+
+        // ===========================================================
+        // 启动
+        // ===========================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            // 补齐 findIndex
+            if (!Array.prototype.findIndex) {
+                Object.defineProperty(Array.prototype, 'findIndex', {
+                    value: function(predicate) {
+                        for (let i = 0; i < this.length; i++) {
+                            if (predicate(this[i], i, this)) return i;
+                        }
+                        return -1;
+                    }
+                });
+            }
+            // 反向迭代
+            Array.prototype._reverse = function() {
+                const arr = [...this];
+                for (let i = 0; i < arr.length / 2; i++) {
+                    [arr[i], arr[arr.length - 1 - i]] = [arr[arr.length - 1 - i], arr[i]];
+                }
+                return arr;
+            };
+
+            const app = new App();
+            window.app = app;
+        });
+    </script>
+</body>
+</html>
