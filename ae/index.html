@@ -731,6 +731,198 @@
         #import-media {
             display: none;
         }
+
+        /* ============================================================
+           V2 ENHANCEMENT — 布局 / 配色 / 空状态 / 效果系统
+           ============================================================ */
+        :root {
+            --bg-primary: #1e1e2e;      /* 画布：最亮，视觉中心 */
+            --bg-panel: #11111b;        /* 工具面板：最暗 */
+            --bg-input: #1e1e2e;
+            --accent: #89b4fa;
+            --accent-hover: #b4d0fb;
+            --text-primary: #cdd6f4;
+            --text-secondary: #a6adc8;
+            --text-dim: #6c7086;
+            --border: #313244;
+            --border-light: #45475a;
+            --warning: #f9e2af;
+            --selection: rgba(137,180,250,0.18);
+            --playhead: #f38ba8;
+            --keyframe: #ffd700;
+            --track-even: #181825;
+            --track-odd: #1e1e2e;
+            --ruler-bg: #181825;
+            --scroll-bg: #11111b;
+        }
+        #app {
+            grid-template-rows: 48px 1fr 280px;
+            grid-template-columns: 240px 1fr 320px;
+        }
+        #app.left-collapsed  { grid-template-columns: 0 1fr 320px; }
+        #app.right-collapsed { grid-template-columns: 240px 1fr 0; }
+        #app.left-collapsed #left-panel,
+        #app.right-collapsed #right-panel { display: none; }
+        #top-menu { height: 48px; padding: 0 14px; }
+        #top-menu .logo { font-size: 15px; }
+        #top-menu .menu-items .mi { font-size: 12px; padding: 5px 11px; }
+        #top-menu .workspace-info { margin-left: 12px; border-left: none; }
+        #workspace-collapse { margin-left: auto; display: flex; gap: 4px; }
+        #timeline-panel {
+            height: 280px;
+            min-height: 200px;
+            grid-template-rows: 48px 1fr;
+        }
+        #timeline-controls { height: 48px; gap: 4px; }
+        #timeline-controls .time-display { font-size: 12px; }
+        #layer-stack { border-right: 1px solid var(--border); }
+        #layer-stack .layer-row { height: 22px; }
+        #layer-stack .layer-row .expand-arrow {
+            width: 12px; font-size: 8px; color: var(--text-dim); cursor: pointer; flex-shrink: 0;
+        }
+        #layer-stack .layer-row.sub-row {
+            padding-left: 28px; height: 20px; font-size: 9px; cursor: default;
+        }
+        #layer-stack .layer-row.sub-row .sub-name {
+            flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        #layer-stack .layer-row.sub-row .sub-watch { color: var(--text-dim); cursor: pointer; }
+        #layer-stack .layer-row.sub-row .sub-watch.on { color: var(--accent); }
+        #layer-stack-empty {
+            padding: 24px 10px; text-align: center; color: var(--text-dim);
+            font-size: 10px; line-height: 1.8;
+        }
+        #layer-properties { display: none !important; }
+
+        /* ---- 空状态 ---- */
+        .empty-state {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; gap: 7px; padding: 20px 12px; color: var(--text-dim);
+        }
+        .empty-state.hidden { display: none !important; }
+        .empty-state.compact { flex: 1; }
+        .empty-icon { font-size: 26px; opacity: 0.5; }
+        .empty-title { font-size: 12px; color: var(--text-secondary); }
+        .empty-desc { font-size: 10px; line-height: 1.7; color: var(--text-dim); }
+        .empty-desc small { font-size: 9px; color: #585b70; }
+        #timeline-empty {
+            position: absolute; left: 0; right: 0; top: 22px; bottom: 0; z-index: 15;
+            background: rgba(17,17,27,0.88); pointer-events: none;
+        }
+
+        /* ---- 效果库 ---- */
+        #effects-library .effect-library-list { display: flex; flex-direction: column; gap: 2px; }
+        #effects-library .effect-item {
+            padding: 5px 8px; font-size: 11px; color: var(--text-secondary);
+            border: 1px solid transparent; border-radius: 4px; cursor: pointer;
+            display: flex; align-items: center; gap: 8px;
+        }
+        #effects-library .effect-item:hover {
+            background: #1e1e2e; border-color: var(--border); color: var(--text-primary);
+        }
+        #effects-library .effect-item .icon { font-size: 14px; color: var(--accent); }
+        .library-hint { font-size: 9px; color: var(--text-dim); padding: 7px 8px 2px; }
+
+        /* ---- 属性检查器 ---- */
+        #inspector { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+        .inspector-title {
+            padding: 9px 10px !important; border-bottom: 1px solid var(--border);
+            background: var(--bg-panel); position: sticky; top: 0; z-index: 2;
+        }
+        #inspector-content { padding: 8px; overflow-y: auto; flex: 1; }
+        .inspector-header {
+            display: flex; align-items: center; gap: 6px; padding: 2px 2px 10px;
+            border-bottom: 1px solid var(--border); margin-bottom: 6px;
+        }
+        .inspector-header .name { font-weight: 600; font-size: 12px; color: var(--text-primary); }
+        .inspector-header .tag {
+            font-size: 9px; color: var(--text-dim); background: #1e1e2e;
+            border: 1px solid var(--border); border-radius: 3px; padding: 1px 5px;
+        }
+        .inspector-header .header-tools { margin-left: auto; display: flex; gap: 8px; }
+        .inspector-header .header-tools span { cursor: pointer; color: var(--text-dim); font-size: 11px; }
+        .group-title {
+            font-size: 10px; color: var(--text-secondary); font-weight: 600;
+            padding: 10px 2px 5px; display: flex; align-items: center; gap: 6px; cursor: pointer;
+        }
+        .group-title .arrow { color: var(--text-dim); font-size: 8px; }
+        .inspector .prop-row { display: flex; align-items: center; gap: 6px; padding: 3px 0; font-size: 10px; }
+        .inspector .prop-label { width: 56px; color: var(--text-secondary); flex-shrink: 0; }
+        .inspector .prop-value {
+            width: 54px; background: #1e1e2e; border: 1px solid var(--border);
+            color: var(--text-primary); border-radius: 3px; padding: 2px 4px;
+            font-family: var(--font-mono); font-size: 10px; text-align: right;
+        }
+        .inspector .prop-value:focus { border-color: var(--accent); outline: none; }
+        .inspector .prop-unit { width: 20px; color: var(--text-dim); font-size: 9px; }
+        .stopwatch {
+            width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center;
+            border-radius: 50%; border: 1px solid var(--border); color: var(--text-dim);
+            font-size: 8px; cursor: pointer; flex-shrink: 0;
+        }
+        .stopwatch:hover { border-color: var(--accent); color: var(--accent); }
+        .stopwatch.on { background: var(--accent); border-color: var(--accent); color: #11111b; }
+        .kf-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--keyframe); opacity: 0; }
+        .kf-dot.visible { opacity: 1; }
+
+        /* ---- 效果卡片 ---- */
+        .fx-card {
+            border: 1px solid var(--border); border-radius: 5px; margin-bottom: 8px;
+            background: #181825; overflow: visible;
+        }
+        .fx-card.dragging { opacity: 0.4; }
+        .fx-card.drag-over { border-color: var(--accent); }
+        .fx-head {
+            display: flex; align-items: center; gap: 6px; padding: 6px 8px;
+            background: #1e1e2e; cursor: grab; border-radius: 4px 4px 0 0;
+        }
+        .fx-head .fx-arrow { color: var(--text-dim); font-size: 8px; cursor: pointer; width: 10px; }
+        .fx-head .fx-check { cursor: pointer; color: var(--accent); font-size: 11px; }
+        .fx-head .fx-name { font-size: 11px; color: var(--text-primary); flex: 1; }
+        .fx-head .fx-menu { cursor: pointer; color: var(--text-dim); font-size: 13px; }
+        .fx-head .fx-menu:hover { color: var(--text-primary); }
+        .fx-body { padding: 6px 8px 8px; }
+        .fx-param { display: flex; align-items: center; gap: 6px; padding: 3px 0; font-size: 10px; }
+        .fx-param .p-label { width: 56px; color: var(--text-secondary); flex-shrink: 0; cursor: pointer; }
+        .fx-param input[type="range"] { flex: 1; min-width: 0; height: 3px; accent-color: var(--accent); }
+        .fx-param .p-value {
+            width: 40px; background: #11111b; border: 1px solid var(--border); border-radius: 3px;
+            color: var(--text-primary); font-family: var(--font-mono); font-size: 9px;
+            text-align: right; padding: 2px;
+        }
+        .fx-param .p-unit { width: 18px; color: var(--text-dim); font-size: 9px; }
+        .fx-param select {
+            width: 62px; background: #11111b; border: 1px solid var(--border);
+            color: var(--text-primary); border-radius: 3px; font-size: 10px; padding: 2px;
+        }
+        .fx-param input[type="color"] {
+            width: 30px; height: 18px; background: transparent;
+            border: 1px solid var(--border); padding: 0; cursor: pointer;
+        }
+        .fx-menu-pop {
+            position: fixed; background: #1e1e2e; border: 1px solid var(--border-light);
+            border-radius: 4px; z-index: 500; box-shadow: 0 6px 20px rgba(0,0,0,0.55); padding: 3px;
+        }
+        .fx-menu-pop div {
+            padding: 5px 12px; font-size: 10px; color: var(--text-secondary);
+            cursor: pointer; white-space: nowrap;
+        }
+        .fx-menu-pop div:hover { background: var(--accent); color: #11111b; }
+        .fx-empty-hint {
+            font-size: 9px; color: var(--text-dim); text-align: center;
+            padding: 12px 4px; border: 1px dashed var(--border); border-radius: 4px;
+        }
+        .zoom-select {
+            background: var(--bg-input); border: 1px solid var(--border); color: var(--text-secondary);
+            font-size: 10px; border-radius: 3px; padding: 1px 3px; font-family: var(--font-ui);
+        }
+        #project-panel.drag-over { outline: 1px dashed var(--accent); outline-offset: -3px; }
+        .asset-item {
+            padding: 3px 8px 3px 22px; font-size: 10px; color: var(--text-secondary);
+            display: flex; align-items: center; gap: 4px;
+        }
+        .asset-item .icon { color: var(--accent); font-size: 12px; }
+
     </style>
 </head>
 <body>
@@ -744,6 +936,10 @@
                 <span class="mi">视图</span><span class="mi">窗口</span><span class="mi">帮助</span>
             </nav>
             <div class="workspace-info">未命名合成 • 1920×1080 • 30fps</div>
+            <div id="workspace-collapse" title="折叠面板">
+                <span class="mi" data-collapse="left" title="折叠项目面板">◧</span>
+                <span class="mi" data-collapse="right" title="折叠属性面板">◨</span>
+            </div>
         </header>
 
         <!-- ===== LEFT PANEL ===== -->
@@ -754,13 +950,16 @@
             </div>
             <div id="project-panel">
                 <button class="import-btn" id="import-btn">📥 导入媒体</button>
-                <div class="folder"><span class="icon">📁</span> 合成</div>
-                <div class="file"><span class="icon">🎬</span> 合成 1</div>
-                <div class="folder"><span class="icon">📁</span> 素材</div>
-                <div class="file"><span class="icon">🖼️</span> background.png</div>
-                <div class="file"><span class="icon">🖼️</span> logo.svg</div>
-                <div class="folder"><span class="icon">📁</span> 输出</div>
-                <div style="padding:8px 4px;color:var(--text-dim);font-size:9px;">▲ 将素材拖入时间轴</div>
+                <div class="project-tree">
+                    <div class="folder"><span class="icon">📁</span> 合成</div>
+                    <div class="file"><span class="icon">🎬</span> 合成 1</div>
+                </div>
+                <div id="project-empty" class="empty-state compact">
+                    <div class="empty-icon">📁</div>
+                    <div class="empty-title">导入素材</div>
+                    <div class="empty-desc">拖拽文件到此处<br>或点击"导入媒体"<br><small>支持 PNG / JPG / SVG / GIF / MP4</small></div>
+                </div>
+                <div id="asset-list"></div>
             </div>
             <div id="info-panel">
                 <div><span class="label">分辨率:</span> <span class="value">1920 × 1080</span></div>
@@ -778,6 +977,13 @@
                 <span class="tool">⛶</span><span class="tool">⊞</span><span class="tool">⤡</span>
                 <span class="sep"></span>
                 <span class="tool">🔍</span>
+                <select id="canvas-zoom" class="zoom-select" title="画布缩放">
+                    <option value="fit">适应窗口</option>
+                    <option value="2">200%</option>
+                    <option value="1">100%</option>
+                    <option value="0.5">50%</option>
+                    <option value="0.25">25%</option>
+                </select>
                 <span class="zoom-indicator" id="zoom-indicator">100%</span>
                 <span style="margin-left:auto;color:var(--text-dim);font-size:9px;">合成: 合成 1</span>
             </div>
@@ -792,13 +998,14 @@
 
         <!-- ===== RIGHT PANEL ===== -->
         <aside id="right-panel">
-            <div class="section" id="effects-section">
-                <div class="section-title"><span class="arrow">▼</span> 效果 & 预设</div>
-                <div class="effect-item"><span class="icon">▣</span> 模糊</div>
-                <div class="effect-item"><span class="icon">◑</span> 投影</div>
-                <div class="effect-item"><span class="icon">◈</span> 发光</div>
-                <div class="effect-item"><span class="icon">▤</span> 渐变</div>
-                <div class="effect-item"><span class="icon">▦</span> 描边</div>
+            <div class="section" id="effects-library">
+                <div class="section-title"><span class="arrow">▼</span> 效果与预设</div>
+                <div class="effect-library-list">
+                    <div class="effect-item" data-effect="blur"><span class="icon">▣</span> 模糊</div>
+                    <div class="effect-item" data-effect="dropShadow"><span class="icon">◑</span> 投影</div>
+                    <div class="effect-item" data-effect="glow"><span class="icon">◈</span> 发光</div>
+                </div>
+                <div class="library-hint">点击添加到选中图层</div>
             </div>
             <div class="section" id="align-section">
                 <div class="section-title"><span class="arrow">▼</span> 对齐</div>
@@ -808,9 +1015,14 @@
                     <button title="水平分布">⇔</button><button title="垂直分布">⇅</button>
                 </div>
             </div>
-            <div class="section" style="border-bottom:none;">
-                <div class="section-title"><span class="arrow">▼</span> 属性</div>
-                <div style="padding:4px 0;font-size:10px;color:var(--text-dim);">选择一个图层开始编辑</div>
+            <div id="inspector">
+                <div class="section-title inspector-title"><span class="arrow">▼</span> 属性</div>
+                <div id="inspector-empty" class="empty-state compact">
+                    <div class="empty-icon">👆</div>
+                    <div class="empty-title">选择图层</div>
+                    <div class="empty-desc">在时间轴中点击一个图层<br>这里会显示它的属性</div>
+                </div>
+                <div id="inspector-content"></div>
             </div>
         </aside>
 
@@ -839,6 +1051,9 @@
                 <div id="timeline-body">
                     <canvas id="track-canvas"></canvas>
                     <div class="playhead-line" id="playhead-line"></div>
+                </div>
+                <div id="timeline-empty" class="empty-state hidden">
+                    <div class="empty-desc">从项目面板拖拽素材到此处创建图层</div>
                 </div>
             </div>
             <div class="resize-handle" id="timeline-resize-handle"></div>
@@ -873,45 +1088,271 @@
         };
 
         // ===========================================================
-        // 工具函数
+        // 工具函数 (V2: 插值 / 贝塞尔 / 求值)
         // ===========================================================
         function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 
-        function lerp(a, b, t) { return a + (b - a) * t; }
+        function cloneValue(v) {
+            if (Array.isArray(v)) return v.map(cloneValue);
+            if (v && typeof v === 'object') {
+                const o = {};
+                for (const k in v) o[k] = cloneValue(v[k]);
+                return o;
+            }
+            return v;
+        }
 
-        function formatTime(seconds) {
-            const s = Math.floor(seconds);
-            const cs = Math.floor((seconds - s) * 100);
-            const m = Math.floor(s / 60);
-            const sec = s % 60;
-            return String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0') + ':' + String(cs).padStart(2, '0');
+        /** 支持 number / array([x,y]) / object({r,g,b,a}) / 其它硬切 */
+        function lerp(a, b, t) {
+            if (typeof a === 'number' && typeof b === 'number') return a + (b - a) * t;
+            if (Array.isArray(a) && Array.isArray(b)) return a.map((v, i) => lerp(v, b[i], t));
+            if (a && b && typeof a === 'object' && typeof b === 'object') {
+                const out = {};
+                for (const k in a) out[k] = lerp(a[k], b[k], t);
+                return out;
+            }
+            return t < 0.5 ? a : b;
+        }
+
+        function bezierX(u, x1, x2) { const inv = 1 - u; return 3 * inv * inv * u * x1 + 3 * inv * u * u * x2 + u * u * u; }
+        function bezierY(u, y1, y2) { const inv = 1 - u; return 3 * inv * inv * u * y1 + 3 * inv * u * u * y2 + u * u * u; }
+
+        /** 二分法反解 x -> u，20 次足够精度 */
+        function solveForT(x, x1, x2) {
+            let lo = 0, hi = 1, mid = 0.5;
+            for (let i = 0; i < 20; i++) {
+                mid = (lo + hi) / 2;
+                if (bezierX(mid, x1, x2) < x) lo = mid; else hi = mid;
+            }
+            return mid;
+        }
+
+        /** outCtrl = 前一帧的 out 控制点, inCtrl = 后一帧的 in 控制点 */
+        function cubicBezier(t, outCtrl, inCtrl) {
+            const u = solveForT(clamp(t, 0, 1), outCtrl.x1, inCtrl.x1);
+            return bezierY(u, outCtrl.y1, inCtrl.y1);
+        }
+
+        const DEFAULT_EASING = { in: { x1: 0.33, y1: 0 }, out: { x1: 0.67, y1: 1 } };
+
+        /** AnimatedProperty 工厂：秒表未激活时只有 value */
+        function makeAnimated(value, opts) {
+            opts = opts || {};
+            return {
+                animated: !!opts.animated,
+                value: cloneValue(value),
+                interpolation: opts.interpolation || 'bezier',
+                keyframes: [],
+            };
+        }
+
+        function makeKeyframe(time, value, easing) {
+            return {
+                time: time,
+                value: cloneValue(value),
+                easing: easing
+                    ? { in: { x1: easing.in.x1, y1: easing.in.y1 }, out: { x1: easing.out.x1, y1: easing.out.y1 } }
+                    : { in: { x1: DEFAULT_EASING.in.x1, y1: DEFAULT_EASING.in.y1 }, out: { x1: DEFAULT_EASING.out.x1, y1: DEFAULT_EASING.out.y1 } },
+                selected: false,
+            };
+        }
+
+        function setAnimatedKeyframe(ap, time, value) {
+            const idx = ap.keyframes.findIndex(k => Math.abs(k.time - time) < 1e-4);
+            const v = cloneValue(value);
+            if (idx >= 0) {
+                ap.keyframes[idx].value = v;
+                return ap.keyframes[idx];
+            }
+            const kf = makeKeyframe(time, v);
+            ap.keyframes.push(kf);
+            ap.keyframes.sort((a, b) => a.time - b.time);
+            return kf;
+        }
+
+        /** 核心求值函数 */
+        function evaluateProperty(prop, time) {
+            if (!prop) return undefined;
+            if (!prop.animated || !prop.keyframes.length) return prop.value;
+            const kfs = prop.keyframes;
+            if (time <= kfs[0].time) return kfs[0].value;
+            if (time >= kfs[kfs.length - 1].time) return kfs[kfs.length - 1].value;
+            let i = 0;
+            while (i < kfs.length - 1 && kfs[i + 1].time <= time) i++;
+            const a = kfs[i], b = kfs[i + 1];
+            const span = b.time - a.time;
+            const t = span > 0 ? (time - a.time) / span : 0;
+            const eased = prop.interpolation === 'bezier'
+                ? cubicBezier(t, a.easing.out, b.easing.in)
+                : t;
+            return lerp(a.value, b.value, eased);
+        }
+
+        /** 显示格式：时:分:秒:帧 */
+        function formatTime(seconds, fps) {
+            const f = fps || CONFIG.FPS;
+            const totalFrames = Math.max(0, Math.round(seconds * f));
+            const ff = totalFrames % f;
+            const totalSec = Math.floor(totalFrames / f);
+            const ss = totalSec % 60;
+            const mm = Math.floor(totalSec / 60) % 60;
+            const hh = Math.floor(totalSec / 3600);
+            return [hh, mm, ss, ff].map(n => String(n).padStart(2, '0')).join(':');
+        }
+        function formatClock(seconds) {
+            const s = Math.max(0, Math.floor(seconds));
+            return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+        }
+        function hexToRgba(hex, alpha) {
+            let h = String(hex || '#000000').replace('#', '');
+            if (h.length === 3) h = h.split('').map(c => c + c).join('');
+            const n = parseInt(h, 16);
+            if (isNaN(n)) return 'rgba(0,0,0,' + alpha + ')';
+            return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + clamp(alpha, 0, 1) + ')';
+        }
+        let _uidCounter = 0;
+        function uid(prefix) { return (prefix || 'id') + '_' + (++_uidCounter); }
+
+        function escapeHtml(str) {
+            return String(str == null ? '' : str)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+        function round1(v) { return Math.round((Number(v) || 0) * 10) / 10; }
+
+        const PROP_LABELS = {
+            x: '位置 X', y: '位置 Y', scaleX: '缩放 X', scaleY: '缩放 Y',
+            rotation: '旋转', opacity: '不透明度',
+        };
+        function effectPrimaryKey(id) {
+            return id === 'blur' ? 'radius' : id === 'dropShadow' ? 'distance' : 'intensity';
         }
 
         // ===========================================================
-        // 图层类
+        // 效果定义 (V2)
+        // ===========================================================
+        const EFFECT_DEFS = {
+            blur: {
+                id: 'blur', name: '模糊', icon: '▣',
+                params: {
+                    radius:    { label: '模糊半径', type: 'number', value: 10, min: 0, max: 100, step: 0.1, unit: 'px' },
+                    direction: { label: '模糊方向', type: 'enum', value: 'all', options: [['all','全部'],['horizontal','水平'],['vertical','垂直']] },
+                    quality:   { label: '质量', type: 'enum', value: 'medium', options: [['low','低'],['medium','中'],['high','高']] },
+                },
+            },
+            dropShadow: {
+                id: 'dropShadow', name: '投影', icon: '◑',
+                params: {
+                    distance: { label: '距离', type: 'number', value: 5, min: 0, max: 200, step: 1, unit: 'px' },
+                    angle:    { label: '角度', type: 'number', value: 135, min: 0, max: 360, step: 1, unit: '°' },
+                    size:     { label: '大小', type: 'number', value: 5, min: 0, max: 50, step: 0.5, unit: 'px' },
+                    opacity:  { label: '不透明度', type: 'number', value: 75, min: 0, max: 100, step: 1, unit: '%' },
+                    color:    { label: '颜色', type: 'color', value: '#000000' },
+                },
+            },
+            glow: {
+                id: 'glow', name: '发光', icon: '◈',
+                params: {
+                    intensity: { label: '强度', type: 'number', value: 50, min: 0, max: 100, step: 1, unit: '%' },
+                    size:      { label: '大小', type: 'number', value: 20, min: 0, max: 100, step: 1, unit: 'px' },
+                    color:     { label: '颜色', type: 'color', value: '#ffffff' },
+                },
+            },
+        };
+
+        function createEffect(id) {
+            const def = EFFECT_DEFS[id];
+            if (!def) return null;
+            const effect = {
+                id: def.id, name: def.name, icon: def.icon,
+                enabled: true, expanded: true,
+                params: {}, keyframes: {},
+            };
+            Object.keys(def.params).forEach(k => {
+                const d = def.params[k];
+                const ap = makeAnimated(cloneValue(d.value));
+                effect.params[k] = {
+                    key: k, label: d.label, type: d.type,
+                    value: d.value, min: d.min, max: d.max, step: d.step,
+                    unit: d.unit || '', options: d.options || null,
+                    anim: ap,
+                };
+                effect.keyframes[k] = ap;
+            });
+            return effect;
+        }
+
+        function cloneEffect(e) {
+            const n = createEffect(e.id);
+            if (!n) return null;
+            n.enabled = e.enabled;
+            n.expanded = e.expanded;
+            Object.keys(n.params).forEach(k => {
+                const src = e.params[k].anim;
+                const dst = n.params[k].anim;
+                dst.animated = src.animated;
+                dst.value = cloneValue(src.value);
+                dst.interpolation = src.interpolation;
+                dst.keyframes = src.keyframes.map(kf => ({
+                    time: kf.time, value: cloneValue(kf.value),
+                    easing: { in: { x1: kf.easing.in.x1, y1: kf.easing.in.y1 }, out: { x1: kf.easing.out.x1, y1: kf.easing.out.y1 } },
+                    selected: false,
+                }));
+                n.keyframes[k] = dst;
+                n.params[k].value = cloneValue(src.value);
+            });
+            return n;
+        }
+
+        function effectParamValue(effect, key, time) {
+            const p = effect.params[key];
+            return p ? evaluateProperty(p.anim, time) : undefined;
+        }
+
+        // ===========================================================
+        // 图层类 (V2: AnimatedProperty)
         // ===========================================================
         let _layerIdCounter = 0;
 
+        // 扁平兼容名 -> [属性组, 数组索引]
+        const PROP_MAP = {
+            x: ['position', 0], y: ['position', 1],
+            scaleX: ['scale', 0], scaleY: ['scale', 1],
+            rotation: ['rotation', null], opacity: ['opacity', null],
+            anchorX: ['anchor', 0], anchorY: ['anchor', 1],
+        };
+
         class Layer {
-            /**
-             * @param {string} type - 'solid' | 'text' | 'image' | 'video'
-             * @param {string} name
-             * @param {object} props
-             */
-            constructor(type, name, props = {}) {
+            constructor(type, name, props) {
+                props = props || {};
                 this.id = ++_layerIdCounter;
                 this.type = type;
-                this.name = name || `${type} ${this.id}`;
-                // 变换属性
-                this.anchorX = props.anchorX || 0.5;
-                this.anchorY = props.anchorY || 0.5;
-                this.x = props.x || 0;
-                this.y = props.y || 0;
-                this.scaleX = props.scaleX || 1.0;
-                this.scaleY = props.scaleY || 1.0;
-                this.rotation = props.rotation || 0;
-                this.opacity = props.opacity || 1.0;
-                // 类型特定属性
+                this.name = name || type + ' ' + this.id;
+
+                this.visible = true;
+                this.locked = false;
+                this.muted = false;
+                this.solo = false;
+                this.audioOn = true;
+                this.parent = props.parent || null;
+                this.inPoint = 0;
+                this.outPoint = null; // null = 合成末尾
+
+                // 核心变换：全部包装成 AnimatedProperty
+                this.properties = {
+                    position: makeAnimated([props.x || 0, props.y || 0]),
+                    scale: makeAnimated([
+                        props.scaleX === undefined ? 1 : props.scaleX,
+                        props.scaleY === undefined ? 1 : props.scaleY,
+                    ]),
+                    rotation: makeAnimated(props.rotation || 0),
+                    opacity: makeAnimated(props.opacity === undefined ? 1 : props.opacity),
+                    anchor: makeAnimated([
+                        props.anchorX === undefined ? 0.5 : props.anchorX,
+                        props.anchorY === undefined ? 0.5 : props.anchorY,
+                    ]),
+                };
+
                 this.color = props.color || '#4a90d9';
                 this.text = props.text || 'Hello World';
                 this.fontSize = props.fontSize || 48;
@@ -921,78 +1362,101 @@
                     this.width = props.width || 300;
                     this.height = props.height || 60;
                 }
-                // 图片/视频数据
-                this.imageData = props.imageData || null; // 用于图片图层
-                this.videoElement = null; // 用于视频图层
-                // 关键帧: { 属性名: [ {time, value}, ... ] }
-                this.keyframes = {};
-                // 计时开关
-                this.stopwatch = {};
-                this._initStopwatches();
-                // 可见性等
-                this.visible = true;
-                this.locked = false;
-                this.solo = false;
-                this.audioOn = true;
-                this.selected = false;
-            }
+                this.imageData = props.imageData || null;
+                this.videoElement = null;
 
-            _initStopwatches() {
-                const props = ['x', 'y', 'scaleX', 'scaleY', 'rotation', 'opacity'];
-                props.forEach(p => {
-                    this.stopwatch[p] = false;
-                    this.keyframes[p] = [];
+                this.effects = [];
+                this.selected = false;
+                this.expanded = false;
+                this.showTransform = true;
+                this.showEffects = true;
+
+                // 兼容视图层读取
+                this.keyframes = {};
+                this.stopwatch = {};
+                const self = this;
+                Object.keys(PROP_MAP).forEach(prop => {
+                    const group = PROP_MAP[prop][0];
+                    Object.defineProperty(self.keyframes, prop, {
+                        get: function () { return self.properties[group].keyframes; },
+                        enumerable: true,
+                    });
+                    Object.defineProperty(self.stopwatch, prop, {
+                        get: function () { return self.properties[group].animated; },
+                        enumerable: true,
+                    });
                 });
             }
 
-            toggleStopwatch(prop) {
-                if (this.stopwatch[prop] === undefined) return;
-                this.stopwatch[prop] = !this.stopwatch[prop];
-                if (this.stopwatch[prop]) {
-                    // 启用时在当前位置创建关键帧
+            // ---- 扁平属性读写（兼容拖拽 / 面板代码）----
+            get x() { return this.properties.position.value[0]; }
+            set x(v) { this.properties.position.value[0] = v; }
+            get y() { return this.properties.position.value[1]; }
+            set y(v) { this.properties.position.value[1] = v; }
+            get scaleX() { return this.properties.scale.value[0]; }
+            set scaleX(v) { this.properties.scale.value[0] = v; }
+            get scaleY() { return this.properties.scale.value[1]; }
+            set scaleY(v) { this.properties.scale.value[1] = v; }
+            get rotation() { return this.properties.rotation.value; }
+            set rotation(v) { this.properties.rotation.value = v; }
+            get opacity() { return this.properties.opacity.value; }
+            set opacity(v) { this.properties.opacity.value = v; }
+            get anchorX() { return this.properties.anchor.value[0]; }
+            set anchorX(v) { this.properties.anchor.value[0] = v; }
+            get anchorY() { return this.properties.anchor.value[1]; }
+            set anchorY(v) { this.properties.anchor.value[1] = v; }
+
+            isAnimated(prop) {
+                const m = PROP_MAP[prop];
+                return m ? this.properties[m[0]].animated : false;
+            }
+
+            /** 秒表开关；关闭时把当前求值固化回静态值并清空关键帧 */
+            toggleStopwatch(prop, time) {
+                const m = PROP_MAP[prop];
+                if (!m) return false;
+                const ap = this.properties[m[0]];
+                ap.animated = !ap.animated;
+                if (!ap.animated) {
+                    const v = evaluateProperty(ap, time || 0);
+                    ap.value = cloneValue(v);
+                    ap.keyframes.length = 0;
                 }
-                return this.stopwatch[prop];
+                return ap.animated;
             }
 
             setKeyframe(prop, time, value) {
-                if (!this.keyframes[prop]) return;
-                const arr = this.keyframes[prop];
-                const idx = arr.findIndex(kf => Math.abs(kf.time - time) < 1 / CONFIG.FPS);
-                if (idx >= 0) {
-                    arr[idx].value = value;
+                const m = PROP_MAP[prop];
+                if (!m) return null;
+                const ap = this.properties[m[0]];
+                let v;
+                if (m[1] === null) {
+                    v = cloneValue(value);
                 } else {
-                    arr.push({ time: time, value: value });
-                    arr.sort((a, b) => a.time - b.time);
+                    v = cloneValue(ap.value);
+                    v[m[1]] = value;
                 }
+                return setAnimatedKeyframe(ap, time, v);
             }
 
+            /** 求值：animate=true 时走贝塞尔插值 */
             getValue(prop, time) {
-                if (!this.stopwatch[prop] || !this.keyframes[prop] || this.keyframes[prop].length === 0) {
-                    return this[prop];
-                }
-                const arr = this.keyframes[prop];
-                if (arr.length === 0) return this[prop];
-                if (time <= arr[0].time) return arr[0].value;
-                if (time >= arr[arr.length - 1].time) return arr[arr.length - 1].value;
-                let lo = 0,
-                    hi = arr.length - 1;
-                while (lo < hi - 1) {
-                    const mid = (lo + hi) / 2;
-                    if (arr[mid].time <= time) lo = mid;
-                    else hi = mid;
-                }
-                const a = arr[lo],
-                    b = arr[hi];
-                const t = (time - a.time) / (b.time - a.time);
-                return lerp(a.value, b.value, t);
+                const m = PROP_MAP[prop];
+                if (!m) return this[prop];
+                const v = evaluateProperty(this.properties[m[0]], time);
+                return m[1] === null ? v : v[m[1]];
             }
 
             setProp(prop, value, time) {
-                if (this[prop] === undefined) return;
-                this[prop] = value;
-                if (this.stopwatch[prop] && time !== undefined) {
-                    this.setKeyframe(prop, time, value);
+                const m = PROP_MAP[prop];
+                if (!m) {
+                    this[prop] = value;
+                    return;
                 }
+                const ap = this.properties[m[0]];
+                if (m[1] === null) ap.value = cloneValue(value);
+                else ap.value[m[1]] = value;
+                if (ap.animated && time !== undefined) this.setKeyframe(prop, time, value);
             }
 
             getInterpolatedState(time) {
@@ -1003,8 +1467,8 @@
                     scaleY: this.getValue('scaleY', time),
                     rotation: this.getValue('rotation', time),
                     opacity: this.getValue('opacity', time),
-                    anchorX: this.anchorX,
-                    anchorY: this.anchorY,
+                    anchorX: this.getValue('anchorX', time),
+                    anchorY: this.getValue('anchorY', time),
                     width: this.width,
                     height: this.height,
                     color: this.color,
@@ -1013,35 +1477,47 @@
                     type: this.type,
                     imageData: this.imageData,
                     videoElement: this.videoElement,
+                    effects: this.effects,
                 };
+            }
+
+            /** 时间轴展开后占用的行数 */
+            getRowSpan() {
+                let n = 1;
+                if (this.expanded) {
+                    if (this.showTransform) n += 6;
+                    if (this.showEffects) n += this.effects.length;
+                }
+                return n;
             }
 
             clone() {
                 const l = new Layer(this.type, this.name + ' (副本)', {
-                    x: this.x + 20,
-                    y: this.y + 20,
-                    scaleX: this.scaleX,
-                    scaleY: this.scaleY,
-                    rotation: this.rotation,
-                    opacity: this.opacity,
-                    color: this.color,
-                    text: this.text,
-                    fontSize: this.fontSize,
-                    width: this.width,
-                    height: this.height,
-                    anchorX: this.anchorX,
-                    anchorY: this.anchorY,
+                    x: this.x, y: this.y,
+                    scaleX: this.scaleX, scaleY: this.scaleY,
+                    rotation: this.rotation, opacity: this.opacity,
+                    anchorX: this.anchorX, anchorY: this.anchorY,
+                    color: this.color, text: this.text, fontSize: this.fontSize,
+                    width: this.width, height: this.height,
                     imageData: this.imageData,
                 });
+                Object.keys(this.properties).forEach(group => {
+                    const src = this.properties[group];
+                    const dst = l.properties[group];
+                    dst.animated = src.animated;
+                    dst.value = cloneValue(src.value);
+                    dst.interpolation = src.interpolation;
+                    dst.keyframes = src.keyframes.map(kf => ({
+                        time: kf.time, value: cloneValue(kf.value),
+                        easing: { in: { x1: kf.easing.in.x1, y1: kf.easing.in.y1 }, out: { x1: kf.easing.out.x1, y1: kf.easing.out.y1 } },
+                        selected: false,
+                    }));
+                });
+                l.effects = this.effects.map(e => cloneEffect(e)).filter(Boolean);
                 l.visible = this.visible;
                 l.locked = this.locked;
-                Object.keys(this.keyframes).forEach(p => {
-                    l.keyframes[p] = this.keyframes[p].map(kf => ({ ...kf }));
-                    l.stopwatch[p] = this.stopwatch[p];
-                });
-                if (this.videoElement) {
-                    l.videoElement = this.videoElement; // 共享引用（简化）
-                }
+                l.expanded = this.expanded;
+                if (this.videoElement) l.videoElement = this.videoElement;
                 return l;
             }
         }
@@ -1092,9 +1568,54 @@
                     scaleY: 1,
                 });
                 shape.rotation = 15;
+
+                // 示例关键帧：标题位置往返 + 缓入缓出
+                txt.properties.position.animated = true;
+                txt.properties.position.keyframes = [
+                    makeKeyframe(0, [200, 400]),
+                    makeKeyframe(5, [820, 400]),
+                    makeKeyframe(10, [200, 400]),
+                ];
+                // 示例效果：形状旋转 + 模糊半径动画
+                shape.properties.rotation.animated = true;
+                shape.properties.rotation.keyframes = [
+                    makeKeyframe(0, 15),
+                    makeKeyframe(5, 195),
+                    makeKeyframe(10, 375),
+                ];
+                const blur = createEffect('blur');
+                blur.params.radius.anim.animated = true;
+                blur.params.radius.anim.keyframes = [
+                    makeKeyframe(0, 0),
+                    makeKeyframe(5, 24),
+                    makeKeyframe(10, 0),
+                ];
+                shape.effects.push(blur);
+
                 this.layers.push(bg, txt, shape);
                 this.selectedLayerId = txt.id;
                 txt.selected = true;
+            }
+
+            /** 时间轴与图层堆共用的展开行描述 */
+            getDisplayRows() {
+                const rows = [];
+                this.layers.forEach(layer => {
+                    rows.push({ kind: 'layer', layer: layer });
+                    if (layer.expanded) {
+                        if (layer.showTransform) {
+                            ['x', 'y', 'scaleX', 'scaleY', 'rotation', 'opacity'].forEach(prop => {
+                                rows.push({ kind: 'prop', layer: layer, prop: prop });
+                            });
+                        }
+                        if (layer.showEffects) {
+                            layer.effects.forEach((effect, index) => {
+                                rows.push({ kind: 'effect', layer: layer, effect: effect, index: index });
+                            });
+                        }
+                    }
+                });
+                return rows;
             }
 
             getLayer(id) { return this.layers.find(l => l.id === id); }
@@ -1181,6 +1702,48 @@
             setTime(t) { this.currentTime = clamp(t, 0, this.duration); }
 
             getRenderOrder() { return this.layers.filter(l => l.visible); }
+        }
+
+        // ===========================================================
+        // 效果渲染
+        // ===========================================================
+        function applyEffects(ctx, effects, time, zoom) {
+            if (!effects || !effects.length) return;
+            let filter = '';
+            let shadowColor = null, shadowBlur = 0, shadowOffsetX = 0, shadowOffsetY = 0;
+            const z = zoom || 1;
+
+            effects.forEach(e => {
+                if (!e.enabled) return;
+                if (e.id === 'blur') {
+                    const r = clamp(Number(effectParamValue(e, 'radius', time)) || 0, 0, 100);
+                    if (r > 0) filter += 'blur(' + (r * z).toFixed(2) + 'px) ';
+                } else if (e.id === 'dropShadow') {
+                    const d = Number(effectParamValue(e, 'distance', time)) || 0;
+                    const angle = (Number(effectParamValue(e, 'angle', time)) || 0) * Math.PI / 180;
+                    const size = Number(effectParamValue(e, 'size', time)) || 0;
+                    const op = (Number(effectParamValue(e, 'opacity', time)) || 0) / 100;
+                    const color = effectParamValue(e, 'color', time);
+                    shadowOffsetX = Math.cos(angle) * d;
+                    shadowOffsetY = Math.sin(angle) * d;
+                    shadowBlur = Math.max(shadowBlur, size * z);
+                    shadowColor = hexToRgba(color, op);
+                } else if (e.id === 'glow') {
+                    const intensity = (Number(effectParamValue(e, 'intensity', time)) || 0) / 100;
+                    const size = Number(effectParamValue(e, 'size', time)) || 0;
+                    const color = effectParamValue(e, 'color', time);
+                    shadowBlur = Math.max(shadowBlur, size * z * 1.5);
+                    shadowColor = hexToRgba(color, clamp(intensity, 0, 1));
+                }
+            });
+
+            if (filter) ctx.filter = filter.trim();
+            if (shadowColor) {
+                ctx.shadowColor = shadowColor;
+                ctx.shadowBlur = shadowBlur;
+                ctx.shadowOffsetX = shadowOffsetX;
+                ctx.shadowOffsetY = shadowOffsetY;
+            }
         }
 
         // ===========================================================
@@ -1297,6 +1860,7 @@
 
                 ctx.save();
                 ctx.globalAlpha = opacity;
+                applyEffects(ctx, state.effects, time, this.zoom);
 
                 const cx = state.x, cy = state.y;
                 const sw = state.width * state.scaleX;
@@ -1318,14 +1882,12 @@
                     ctx.font = `bold ${Math.max(12, state.fontSize)}px "Segoe UI", Arial, sans-serif`;
                     ctx.textBaseline = 'top';
                     ctx.textAlign = 'left';
-                    ctx.shadowColor = 'rgba(0,0,0,0.5)';
-                    ctx.shadowBlur = 4 / this.zoom;
-                    ctx.shadowOffsetX = 1 / this.zoom;
-                    ctx.shadowOffsetY = 1 / this.zoom;
-                    ctx.fillText(state.text, 0, 0);
-                    ctx.shadowColor = 'transparent';
-                    ctx.shadowBlur = 0;
-                    ctx.fillStyle = state.color;
+                    // 有效果时阴影交给 applyEffects，避免覆盖发光/投影
+                    const hasFx = state.effects && state.effects.some(e => e.enabled);
+                    if (!hasFx) {
+                        ctx.shadowColor = 'rgba(0,0,0,0.5)';
+                        ctx.shadowBlur = 4 / this.zoom;
+                    }
                     ctx.fillText(state.text, 0, 0);
                 } else if (state.type === 'image' && state.imageData) {
                     // 绘制图片
@@ -1482,104 +2044,145 @@
 
             draw(now) {
                 if (!this.needsRedraw) return;
-                const rctx = this.rulerCtx;
-                const tctx = this.trackCtx;
-                const rw = this.rulerCanvas.width;
-                const rh = this.rulerCanvas.height;
-                const tw = this.trackCanvas.width;
-                const th = this.trackCanvas.height;
+                const rctx = this.rulerCtx, tctx = this.trackCtx;
+                const rw = this.rulerCanvas.width, rh = this.rulerCanvas.height;
+                const tw = this.trackCanvas.width, th = this.trackCanvas.height;
+                const ppsec = this.pixelsPerSecond;
 
-                // 标尺
+                // ---------- 标尺 ----------
                 rctx.clearRect(0, 0, rw, rh);
-                rctx.fillStyle = '#1e1e20';
+                rctx.fillStyle = '#181825';
                 rctx.fillRect(0, 0, rw, rh);
-                const startTime = Math.max(0, this.offsetX / this.pixelsPerSecond);
-                const endTime = Math.min(this.comp.duration, (this.offsetX + rw) / this.pixelsPerSecond);
-                rctx.strokeStyle = '#555555';
-                rctx.fillStyle = '#888888';
+                const startTime = Math.max(0, this.offsetX / ppsec);
+                const endTime = Math.min(this.comp.duration, (this.offsetX + rw) / ppsec);
                 rctx.font = '9px monospace';
                 rctx.textBaseline = 'bottom';
                 rctx.textAlign = 'left';
-                for (let t = Math.floor(startTime); t <= endTime; t += 0.5) {
+                for (let t = Math.floor(startTime * 2) / 2; t <= endTime; t += 0.5) {
                     const x = this.timeToX(t);
                     if (x < -20 || x > rw + 20) continue;
                     const isSec = Math.abs(t - Math.round(t)) < 0.01;
+                    rctx.strokeStyle = isSec ? '#585b70' : '#313244';
                     rctx.lineWidth = isSec ? 1 : 0.5;
-                    rctx.strokeStyle = isSec ? '#666666' : '#444444';
                     rctx.beginPath();
-                    rctx.moveTo(x, isSec ? 14 : 18);
-                    rctx.lineTo(x, 22);
+                    rctx.moveTo(x, isSec ? 13 : 17);
+                    rctx.lineTo(x, rh);
                     rctx.stroke();
-                    if (isSec && x + 20 < rw) {
-                        rctx.fillStyle = '#888888';
-                        rctx.fillText(formatTime(t).slice(0, 5), x + 2, 13);
+                    if (isSec && x + 26 < rw) {
+                        rctx.fillStyle = '#a6adc8';
+                        rctx.fillText(formatClock(t), x + 3, 12);
                     }
                 }
                 const phx = this.timeToX(this.comp.currentTime);
-                rctx.strokeStyle = '#ff4444';
+                rctx.strokeStyle = '#f38ba8';
                 rctx.lineWidth = 1.5;
-                rctx.beginPath();
-                rctx.moveTo(phx, 0);
-                rctx.lineTo(phx, 22);
-                rctx.stroke();
-                rctx.fillStyle = '#ff4444';
+                rctx.beginPath(); rctx.moveTo(phx, 0); rctx.lineTo(phx, rh); rctx.stroke();
+                rctx.fillStyle = '#f38ba8';
                 rctx.font = 'bold 9px monospace';
-                rctx.textAlign = 'center';
-                rctx.textBaseline = 'top';
-                rctx.fillText(formatTime(this.comp.currentTime), Math.min(Math.max(phx, 30), rw - 30), 2);
+                rctx.textAlign = 'center'; rctx.textBaseline = 'top';
+                rctx.fillText(formatTime(this.comp.currentTime, this.comp.fps), clamp(phx, 52, rw - 52), 2);
 
-                // 轨道
+                // ---------- 轨道 ----------
                 tctx.clearRect(0, 0, tw, th);
-                const layers = this.comp.layers;
-                const totalTrackH = layers.length * this.trackHeight;
-                tctx.fillStyle = '#1e1e20';
+                tctx.fillStyle = '#181825';
                 tctx.fillRect(0, 0, tw, th);
-                layers.forEach((layer, idx) => {
-                    const y = idx * this.trackHeight;
-                    tctx.fillStyle = (idx % 2 === 0) ? '#2a2a2c' : '#222224';
-                    tctx.fillRect(0, y, tw, this.trackHeight);
-                    if (layer.selected) {
-                        tctx.fillStyle = '#38383a';
-                        tctx.fillRect(0, y, tw, this.trackHeight);
+                const rows = this.comp.getDisplayRows();
+                const rowH = this.trackHeight;
+                let y = 0;
+
+                rows.forEach((row, idx) => {
+                    if (y > th) return;
+                    const isLayer = row.kind === 'layer';
+                    const selected = row.layer.selected;
+
+                    tctx.fillStyle = isLayer
+                        ? ((idx % 2 === 0) ? '#1e1e2e' : '#181825')
+                        : (selected ? '#232338' : '#15151f');
+                    tctx.fillRect(0, y, tw, rowH);
+                    if (selected && isLayer) {
+                        tctx.fillStyle = 'rgba(137,180,250,0.07)';
+                        tctx.fillRect(0, y, tw, rowH);
                     }
-                    tctx.fillStyle = layer.selected ? '#ffffff' : '#999999';
-                    tctx.font = '9px sans-serif';
+                    tctx.strokeStyle = 'rgba(49,50,68,0.6)';
+                    tctx.lineWidth = 1;
+                    tctx.beginPath(); tctx.moveTo(0, y + rowH - 0.5); tctx.lineTo(tw, y + rowH - 0.5); tctx.stroke();
+
                     tctx.textBaseline = 'middle';
                     tctx.textAlign = 'left';
-                    tctx.fillText(layer.name, 4, y + this.trackHeight / 2);
-                    const props = ['x', 'y', 'scaleX', 'scaleY', 'rotation', 'opacity'];
-                    props.forEach(prop => {
-                        if (!layer.stopwatch[prop] || layer.keyframes[prop].length === 0) return;
-                        layer.keyframes[prop].forEach(kf => {
+                    tctx.font = '9px sans-serif';
+                    if (isLayer) {
+                        tctx.fillStyle = selected ? '#cdd6f4' : '#a6adc8';
+                        tctx.fillText((row.layer.expanded ? '▼ ' : '▶ ') + row.layer.name, 6, y + rowH / 2);
+                    } else if (row.kind === 'prop') {
+                        tctx.fillStyle = '#6c7086';
+                        tctx.fillText('    ' + PROP_LABELS[row.prop], 8, y + rowH / 2);
+                    } else {
+                        tctx.fillStyle = row.effect.enabled ? '#a6adc8' : '#585b70';
+                        tctx.fillText('    ' + row.effect.icon + ' ' + row.effect.name, 8, y + rowH / 2);
+                    }
+
+                    // 收集该行要显示的关键帧属性
+                    const aps = [];
+                    if (isLayer) {
+                        Object.keys(row.layer.properties).forEach(k => aps.push(row.layer.properties[k]));
+                        row.layer.effects.forEach(e => Object.keys(e.keyframes).forEach(k => aps.push(e.keyframes[k])));
+                    } else if (row.kind === 'prop') {
+                        const m = PROP_MAP[row.prop];
+                        if (m) aps.push(row.layer.properties[m[0]]);
+                    } else {
+                        const pk = effectPrimaryKey(row.effect.id);
+                        if (pk && row.effect.keyframes[pk]) aps.push(row.effect.keyframes[pk]);
+                    }
+
+                    const cy = y + rowH / 2;
+                    aps.forEach(ap => {
+                        if (!ap || !ap.animated || !ap.keyframes.length) return;
+                        tctx.strokeStyle = 'rgba(166,173,200,0.22)';
+                        tctx.lineWidth = 1;
+                        tctx.beginPath();
+                        ap.keyframes.forEach((kf, i) => {
                             const kx = this.timeToX(kf.time);
-                            if (kx < -10 || kx > tw + 10) return;
-                            tctx.fillStyle = '#ffd700';
-                            tctx.beginPath();
-                            tctx.arc(kx, y + this.trackHeight / 2, 4, 0, 2 * Math.PI);
-                            tctx.fill();
-                            tctx.strokeStyle = '#aa8800';
-                            tctx.lineWidth = 0.5;
-                            tctx.stroke();
+                            if (i === 0) tctx.moveTo(kx, cy); else tctx.lineTo(kx, cy);
+                        });
+                        tctx.stroke();
+                        ap.keyframes.forEach(kf => {
+                            const kx = this.timeToX(kf.time);
+                            if (kx < -8 || kx > tw + 8) return;
+                            this._drawDiamond(tctx, kx, cy, 4, kf.selected ? '#ffd700' : '#a6adc8');
                         });
                     });
-                    const phx2 = this.timeToX(this.comp.currentTime);
-                    tctx.strokeStyle = 'rgba(255,68,68,0.3)';
-                    tctx.lineWidth = 1;
-                    tctx.beginPath();
-                    tctx.moveTo(phx2, 0);
-                    tctx.lineTo(phx2, th);
-                    tctx.stroke();
-                });
-                tctx.strokeStyle = '#3c3c3c';
-                tctx.lineWidth = 1;
-                tctx.beginPath();
-                tctx.moveTo(0, th - 0.5);
-                tctx.lineTo(tw, th - 0.5);
-                tctx.stroke();
 
+                    y += rowH;
+                });
+
+                tctx.strokeStyle = 'rgba(243,139,168,0.55)';
+                tctx.lineWidth = 1;
+                tctx.beginPath(); tctx.moveTo(phx, 0); tctx.lineTo(phx, th); tctx.stroke();
                 this.needsRedraw = false;
             }
 
+            _drawDiamond(ctx, x, y, r, color) {
+                ctx.save();
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.moveTo(x, y - r);
+                ctx.lineTo(x + r, y);
+                ctx.lineTo(x, y + r);
+                ctx.lineTo(x - r, y);
+                ctx.closePath();
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+                ctx.lineWidth = 0.5;
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            /** 按展开后的行取描述 */
+            rowAtY(sy) {
+                const idx = Math.floor(sy / this.trackHeight);
+                const rows = this.comp.getDisplayRows();
+                return (idx >= 0 && idx < rows.length) ? rows[idx] : null;
+            }
             screenXToTime(sx) { return this.xToTime(sx); }
 
             trackAtY(sy) {
@@ -1590,22 +2193,22 @@
         }
 
         // ===========================================================
-        // 主应用类
+        // 主应用类 (V2)
         // ===========================================================
         class App {
             constructor() {
                 this.comp = new Composition();
+                this.renderer = new Renderer(document.getElementById('comp-canvas'), this.comp);
+                this.timeline = new TimelineUI(
+                    document.getElementById('ruler-canvas'),
+                    document.getElementById('track-canvas'),
+                    this.comp, this
+                );
 
-                const canvasEl = document.getElementById('comp-canvas');
-                this.renderer = new Renderer(canvasEl, this.comp);
-
-                const rulerCanvas = document.getElementById('ruler-canvas');
-                const trackCanvas = document.getElementById('track-canvas');
-                this.timeline = new TimelineUI(rulerCanvas, trackCanvas, this.comp, this);
-
-                // DOM 引用
+                this.appEl = document.getElementById('app');
                 this.layerStackEl = document.getElementById('layer-stack');
-                this.layerPropsEl = document.getElementById('layer-properties');
+                this.inspectorEmptyEl = document.getElementById('inspector-empty');
+                this.inspectorContentEl = document.getElementById('inspector-content');
                 this.timeDisplayEl = document.getElementById('time-display');
                 this.playBtnEl = document.getElementById('play-btn');
                 this.stopBtnEl = document.getElementById('stop-btn');
@@ -1618,22 +2221,27 @@
                 this.importBtn = document.getElementById('import-btn');
                 this.importInput = document.getElementById('import-media');
                 this.exportBtn = document.getElementById('export-btn');
+                this.canvasZoomEl = document.getElementById('canvas-zoom');
+                this.timelineEmptyEl = document.getElementById('timeline-empty');
+                this.projectEmptyEl = document.getElementById('project-empty');
+                this.assetListEl = document.getElementById('asset-list');
 
-                // 状态
+                this.importedCount = 0;
                 this.isDraggingLayer = false;
-                this.dragStartX = 0;
-                this.dragStartY = 0;
-                this.dragLayerOrigX = 0;
-                this.dragLayerOrigY = 0;
                 this.dragLayer = null;
+                this.dragStartX = 0; this.dragStartY = 0;
+                this.dragLayerOrigX = 0; this.dragLayerOrigY = 0;
                 this.isDraggingPlayhead = false;
+                this.isDraggingKeyframe = false;
+                this.dragKeyframeInfo = null;
                 this.isPanning = false;
-                this.panStartX = 0;
-                this.panStartY = 0;
-                this.panOrigX = 0;
-                this.panOrigY = 0;
-                this.lastFrameTime = 0;
+                this.panStartX = 0; this.panStartY = 0;
+                this.panOrigX = 0; this.panOrigY = 0;
+                this.spaceDown = false;
+                this.zoomMode = 'fit';
                 this.exporting = false;
+                this.fxClipboard = null;
+                this.activeFxMenu = null;
 
                 this._initUI();
                 this._initEvents();
@@ -1641,34 +2249,50 @@
                 this._updateLayerProperties();
                 this._resizeAll();
                 this._startLoop();
-                console.log('Sysbin 动画编辑器 已启动');
+                console.log('Sysbin 动画编辑器 V2 已启动');
             }
 
             _initUI() {
                 this.loopToggleEl.classList.toggle('on', this.comp.isLooping);
                 this._updateTimeDisplay();
+                const tp = document.getElementById('timeline-panel');
+                tp.style.height = '280px';
             }
 
             _initEvents() {
-                // 视口事件
                 const viewport = this.viewportContainer;
-                viewport.addEventListener('mousedown', (e) => this._onViewportMouseDown(e));
-                viewport.addEventListener('mousemove', (e) => this._onViewportMouseMove(e));
-                viewport.addEventListener('mouseup', (e) => this._onViewportMouseUp(e));
-                viewport.addEventListener('mouseleave', (e) => this._onViewportMouseUp(e));
-                viewport.addEventListener('dblclick', (e) => this._onViewportDblClick(e));
+                viewport.addEventListener('mousedown', e => this._onViewportMouseDown(e));
+                viewport.addEventListener('mousemove', e => this._onViewportMouseMove(e));
+                viewport.addEventListener('mouseup', e => this._onViewportMouseUp(e));
+                viewport.addEventListener('mouseleave', e => this._onViewportMouseUp(e));
+                viewport.addEventListener('dblclick', e => this._onViewportDblClick(e));
+                viewport.addEventListener('wheel', e => {
+                    if (!e.ctrlKey) return;
+                    e.preventDefault();
+                    const factor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+                    this.renderer.zoom = clamp(this.renderer.zoom * factor, 0.02, 8);
+                    this.zoomMode = 'custom';
+                    this.zoomIndicatorEl.textContent = Math.round(this.renderer.zoom * 100) + '%';
+                    this.canvasZoomEl.value = 'fit';
+                    this._requestRedraw();
+                }, { passive: false });
 
-                // 时间轴
-                const timelineBody = this.timelineBodyEl;
-                timelineBody.addEventListener('mousedown', (e) => this._onTimelineMouseDown(e));
-                timelineBody.addEventListener('mousemove', (e) => this._onTimelineMouseMove(e));
-                timelineBody.addEventListener('mouseup', (e) => this._onTimelineMouseUp(e));
-                timelineBody.addEventListener('mouseleave', (e) => this._onTimelineMouseUp(e));
+                const tb = this.timelineBodyEl;
+                tb.addEventListener('mousedown', e => this._onTimelineMouseDown(e));
+                tb.addEventListener('mousemove', e => this._onTimelineMouseMove(e));
+                tb.addEventListener('mouseup', e => this._onTimelineMouseUp(e));
+                tb.addEventListener('mouseleave', e => this._onTimelineMouseUp(e));
+                tb.addEventListener('wheel', e => {
+                    if (!e.ctrlKey) return;
+                    e.preventDefault();
+                    const factor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
+                    this.timeline.pixelsPerSecond = clamp(this.timeline.pixelsPerSecond * factor, 20, 1000);
+                    this.timeline.needsRedraw = true;
+                    this._updatePlayheadPosition();
+                }, { passive: false });
 
-                const rulerEl = document.getElementById('timeline-ruler');
-                rulerEl.addEventListener('mousedown', (e) => this._onRulerClick(e));
+                document.getElementById('timeline-ruler').addEventListener('mousedown', e => this._onRulerClick(e));
 
-                // 播放控制
                 this.playBtnEl.addEventListener('click', () => {
                     this.comp.togglePlay();
                     this.playBtnEl.textContent = this.comp.isPlaying ? '⏸' : '▶';
@@ -1679,117 +2303,171 @@
                     this.playBtnEl.textContent = '▶';
                     this.playBtnEl.classList.remove('active');
                     this._updateTimeDisplay();
+                    this._updatePlayheadPosition();
                     this._requestRedraw();
                 });
                 document.getElementById('prev-frame-btn').addEventListener('click', () => {
-                    this.comp.setTime(Math.max(0, this.comp.currentTime - 1 / CONFIG.FPS));
-                    this._updateTimeDisplay();
-                    this._requestRedraw();
+                    this.comp.setTime(Math.max(0, this.comp.currentTime - 1 / this.comp.fps));
+                    this._seekRefresh();
                 });
                 document.getElementById('next-frame-btn').addEventListener('click', () => {
-                    this.comp.setTime(Math.min(this.comp.duration, this.comp.currentTime + 1 / CONFIG.FPS));
-                    this._updateTimeDisplay();
-                    this._requestRedraw();
+                    this.comp.setTime(Math.min(this.comp.duration, this.comp.currentTime + 1 / this.comp.fps));
+                    this._seekRefresh();
                 });
                 this.loopToggleEl.addEventListener('click', () => {
                     this.comp.toggleLoop();
                     this.loopToggleEl.classList.toggle('on', this.comp.isLooping);
                 });
 
-                // 导入媒体
                 this.importBtn.addEventListener('click', () => this.importInput.click());
-                this.importInput.addEventListener('change', (e) => this._onImportMedia(e));
-
-                // 导出 WebM
+                this.importInput.addEventListener('change', e => this._onImportMedia(e));
+                const projectPanel = document.getElementById('project-panel');
+                projectPanel.addEventListener('dragover', e => {
+                    e.preventDefault();
+                    projectPanel.classList.add('drag-over');
+                });
+                projectPanel.addEventListener('dragleave', () => projectPanel.classList.remove('drag-over'));
+                projectPanel.addEventListener('drop', e => {
+                    e.preventDefault();
+                    projectPanel.classList.remove('drag-over');
+                    if (e.dataTransfer.files && e.dataTransfer.files.length) {
+                        this._onImportMedia({ target: { files: e.dataTransfer.files, value: '' } });
+                    }
+                });
                 this.exportBtn.addEventListener('click', () => this._exportWebM());
 
-                // 图层堆叠
-                this.layerStackEl.addEventListener('click', (e) => this._onLayerStackClick(e));
+                this.layerStackEl.addEventListener('click', e => this._onLayerStackClick(e));
+                this.inspectorContentEl.addEventListener('click', e => this._onInspectorClick(e));
+                this.inspectorContentEl.addEventListener('input', e => this._onInspectorInput(e));
+                this.inspectorContentEl.addEventListener('change', e => this._onInspectorInput(e));
+                this.inspectorContentEl.addEventListener('dragstart', e => this._onFxDragStart(e));
+                this.inspectorContentEl.addEventListener('dragover', e => {
+                    const card = e.target.closest('.fx-card');
+                    if (!card || !this._fxDragIndex) return;
+                    e.preventDefault();
+                    card.classList.add('drag-over');
+                });
+                this.inspectorContentEl.addEventListener('dragleave', e => {
+                    const card = e.target.closest('.fx-card');
+                    if (card) card.classList.remove('drag-over');
+                });
+                this.inspectorContentEl.addEventListener('drop', e => this._onFxDrop(e));
 
-                // 键盘
-                document.addEventListener('keydown', (e) => this._onKeyDown(e));
+                document.querySelectorAll('#effects-library .effect-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const layer = this.comp.getSelectedLayer();
+                        if (!layer) { alert('请先选择一个图层'); return; }
+                        layer.effects.push(createEffect(item.dataset.effect));
+                        layer.expanded = true;
+                        layer.showEffects = true;
+                        this._updateLayerStack();
+                        this._updateLayerProperties();
+                        this._requestRedraw();
+                    });
+                });
 
-                // 时间轴缩放
-                document.getElementById('timeline-zoom-slider').addEventListener('input', (e) => {
-                    const val = parseInt(e.target.value);
-                    this.timeline.pixelsPerSecond = CONFIG.PIXELS_PER_SECOND * (val / 100);
+                document.querySelectorAll('[data-collapse]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const cls = btn.dataset.collapse === 'left' ? 'left-collapsed' : 'right-collapsed';
+                        this.appEl.classList.toggle(cls);
+                        setTimeout(() => this._resizeAll(), 30);
+                    });
+                });
+
+                this.canvasZoomEl.addEventListener('change', () => {
+                    this.zoomMode = this.canvasZoomEl.value;
+                    this._applyZoom();
+                });
+
+                document.addEventListener('click', e => {
+                    if (this.activeFxMenu && !e.target.closest('.fx-menu-pop') && !e.target.closest('[data-act="fx-menu"]')) {
+                        this.activeFxMenu.remove();
+                        this.activeFxMenu = null;
+                    }
+                });
+                document.addEventListener('keydown', e => this._onKeyDown(e));
+                document.addEventListener('keyup', e => {
+                    if (e.key === ' ') this.spaceDown = false;
+                });
+
+                document.getElementById('timeline-zoom-slider').addEventListener('input', e => {
+                    this.timeline.pixelsPerSecond = CONFIG.PIXELS_PER_SECOND * (parseInt(e.target.value) / 100);
                     this.timeline.needsRedraw = true;
                     this._updatePlayheadPosition();
-                    this._requestRedraw();
                 });
 
-                // 窗口尺寸调整
                 setInterval(() => this._resizeAll(), 500);
 
-                // 图层属性更改
-                this.layerPropsEl.addEventListener('change', (e) => this._onPropChange(e));
-                this.layerPropsEl.addEventListener('input', (e) => this._onPropChange(e));
-
-                // 时间轴大小调整手柄
-                const resizeHandle = document.getElementById('timeline-resize-handle');
-                let isResizing = false;
-                let startY = 0;
-                let startH = 180;
-                resizeHandle.addEventListener('mousedown', (e) => {
-                    isResizing = true;
-                    startY = e.clientY;
-                    startH = parseInt(document.getElementById('timeline-panel').style.height) || 180;
+                const handle = document.getElementById('timeline-resize-handle');
+                let resizing = false, startY = 0, startH = 280;
+                handle.addEventListener('mousedown', e => {
+                    resizing = true; startY = e.clientY;
+                    startH = parseFloat(document.getElementById('timeline-panel').style.height) || 280;
                     e.preventDefault();
                 });
-                document.addEventListener('mousemove', (e) => {
-                    if (!isResizing) return;
-                    const delta = e.clientY - startY;
-                    const newH = clamp(startH - delta, 80, 400);
-                    document.getElementById('timeline-panel').style.height = newH + 'px';
+                document.addEventListener('mousemove', e => {
+                    if (!resizing) return;
+                    const h = clamp(startH - (e.clientY - startY), 200, 500);
+                    document.getElementById('timeline-panel').style.height = h + 'px';
                     this._resizeAll();
                 });
-                document.addEventListener('mouseup', () => { isResizing = false; });
+                document.addEventListener('mouseup', () => { resizing = false; });
             }
 
             _resizeAll() {
-                const container = this.viewportContainer;
-                const w = container.clientWidth || 800;
-                const h = container.clientHeight || 400;
+                const c = this.viewportContainer;
+                const w = c.clientWidth || 800, h = c.clientHeight || 400;
                 if (w > 0 && h > 0) this.renderer.resize(w, h);
-
-                const timelineBody = this.timelineBodyEl;
-                const tbw = timelineBody.clientWidth || 600;
-                const tbh = timelineBody.clientHeight || 120;
-                if (tbw > 0 && tbh > 0) this.timeline.resize(tbw, tbh + 22);
-
+                const tb = this.timelineBodyEl;
+                const tw = tb.clientWidth || 600, th = tb.clientHeight || 120;
+                if (tw > 0 && th > 0) this.timeline.resize(tw, th + 22);
                 const rulerEl = document.getElementById('timeline-ruler');
-                if (rulerEl && tbw > 0) rulerEl.style.width = tbw + 'px';
-
+                if (rulerEl && tw > 0) rulerEl.style.width = tw + 'px';
+                this._applyZoom();
                 this._requestRedraw();
             }
 
+            _applyZoom() {
+                const r = this.renderer;
+                if (!r.viewportW || !r.viewportH) return;
+                if (this.zoomMode === 'fit' || this.zoomMode === 'custom') {
+                    if (this.zoomMode === 'fit') {
+                        const sx = r.viewportW / this.comp.width, sy = r.viewportH / this.comp.height;
+                        r.zoom = Math.min(sx, sy) * 0.9;
+                        r.panX = (r.viewportW - this.comp.width * r.zoom) / 2;
+                        r.panY = (r.viewportH - this.comp.height * r.zoom) / 2;
+                        this.zoomIndicatorEl.textContent = Math.round(r.zoom * 100) + '%';
+                    }
+                } else {
+                    r.zoom = parseFloat(this.zoomMode) || 1;
+                    r.panX = (r.viewportW - this.comp.width * r.zoom) / 2;
+                    r.panY = (r.viewportH - this.comp.height * r.zoom) / 2;
+                    this.zoomIndicatorEl.textContent = Math.round(r.zoom * 100) + '%';
+                }
+            }
+
             _startLoop() {
-                const loop = (now) => {
+                const loop = now => {
                     if (this.comp.isPlaying) {
-                        const seconds = now / 1000;
-                        this.comp.tick(seconds);
+                        // rAF 相对时间差累加，避免暂停/跳转后绝对时间跳变
+                        this.comp.tick(now / 1000);
                         this._updateTimeDisplay();
                         this._updatePlayheadPosition();
-                        this._updateLayerProperties();
-                        // 更新视频图层的时间
+                        this._updateInspectorValues();
                         this.comp.layers.forEach(layer => {
                             if (layer.type === 'video' && layer.videoElement && layer.videoElement.readyState >= 2) {
-                                // 将视频定位到合成时间
-                                try {
-                                    layer.videoElement.currentTime = this.comp.currentTime;
-                                } catch (e) { /* 忽略 */ }
+                                try { layer.videoElement.currentTime = this.comp.currentTime; } catch (e) { /* ignore */ }
                             }
                         });
+                        if (!this.comp.isPlaying) {
+                            this.playBtnEl.textContent = '▶';
+                            this.playBtnEl.classList.remove('active');
+                        }
                     }
-                    if (this.renderer.needsRedraw || this.comp.isPlaying || this.exporting) {
-                        this.renderer.draw(now);
-                    }
-                    if (this.timeline.needsRedraw || this.comp.isPlaying) {
-                        this.timeline.draw(now);
-                    }
+                    if (this.renderer.needsRedraw || this.comp.isPlaying || this.exporting) this.renderer.draw(now);
+                    if (this.timeline.needsRedraw || this.comp.isPlaying) this.timeline.draw(now);
                     requestAnimationFrame(loop);
                 };
-                this.lastFrameTime = performance.now();
                 requestAnimationFrame(loop);
             }
 
@@ -1799,160 +2477,453 @@
             }
 
             _updateTimeDisplay() {
-                this.timeDisplayEl.textContent = formatTime(this.comp.currentTime);
+                this.timeDisplayEl.textContent = formatTime(this.comp.currentTime, this.comp.fps);
             }
 
             _updatePlayheadPosition() {
                 const phx = this.timeline.timeToX(this.comp.currentTime);
-                this.playheadLineEl.style.transform = `translateX(${phx}px)`;
+                this.playheadLineEl.style.transform = 'translateX(' + phx + 'px)';
                 this.timeline.needsRedraw = true;
             }
 
+            _seekRefresh() {
+                this._updateTimeDisplay();
+                this._updatePlayheadPosition();
+                this._updateInspectorValues();
+                this._requestRedraw();
+            }
+
+            // ---------- 图层堆 ----------
             _updateLayerStack() {
                 const el = this.layerStackEl;
                 el.innerHTML = '';
-                this.comp.layers.forEach((layer, idx) => {
-                    const row = document.createElement('div');
-                    row.className = 'layer-row' + (layer.selected ? ' selected' : '');
-                    row.dataset.layerId = layer.id;
-                    row.innerHTML = `
-                        <span class="vis-toggle ${layer.visible ? 'on' : ''}" data-toggle="vis">👁</span>
-                        <span class="audio-toggle ${layer.audioOn ? 'on' : ''}" data-toggle="audio">🔊</span>
-                        <span class="solo-toggle ${layer.solo ? 'on' : ''}" data-toggle="solo">◎</span>
-                        <span class="lock-toggle ${layer.locked ? 'on' : ''}" data-toggle="lock">🔒</span>
-                        <span class="layer-type-badge">${layer.type[0].toUpperCase()}</span>
-                        <span class="layer-name">${layer.name}</span>
-                    `;
-                    if (layer.selected) {
-                        row.style.borderLeft = '3px solid var(--accent)';
-                        row.style.background = '#38383a';
-                    } else {
-                        row.style.background = (idx % 2 === 0) ? '#2a2a2c' : '#222224';
-                    }
-                    el.appendChild(row);
-                });
-                el.querySelectorAll('.vis-toggle, .audio-toggle, .solo-toggle, .lock-toggle').forEach(el => {
-                    el.addEventListener('click', (e) => {
-                        const row = e.target.closest('.layer-row');
-                        const id = parseInt(row.dataset.layerId);
-                        const layer = this.comp.getLayer(id);
-                        if (!layer) return;
-                        const toggle = e.target.dataset.toggle;
-                        switch (toggle) {
-                            case 'vis':
-                                layer.visible = !layer.visible;
-                                break;
-                            case 'audio':
-                                layer.audioOn = !layer.audioOn;
-                                break;
-                            case 'solo':
-                                layer.solo = !layer.solo;
-                                break;
-                            case 'lock':
-                                layer.locked = !layer.locked;
-                                break;
-                        }
-                        this._updateLayerStack();
-                        this._requestRedraw();
-                    });
-                });
-            }
-
-            _updateLayerProperties() {
-                const layer = this.comp.getSelectedLayer();
-                const el = this.layerPropsEl;
-                if (!layer) {
-                    el.className = 'hidden';
+                if (!this.comp.layers.length) {
+                    el.innerHTML = '<div id="layer-stack-empty">从项目面板拖拽素材<br>到此处创建图层</div>';
+                    this.timelineEmptyEl.classList.remove('hidden');
                     return;
                 }
-                el.className = 'visible';
-                const time = this.comp.currentTime;
-                const vals = {
-                    x: Math.round(layer.getValue('x', time)),
-                    y: Math.round(layer.getValue('y', time)),
-                    scaleX: Math.round(layer.getValue('scaleX', time) * 100),
-                    scaleY: Math.round(layer.getValue('scaleY', time) * 100),
-                    rotation: Math.round(layer.getValue('rotation', time) * 10) / 10,
-                    opacity: Math.round(layer.getValue('opacity', time) * 100),
-                };
-                const props = [
-                    { prop: 'x', label: 'X 位置', value: vals.x, suffix: '' },
-                    { prop: 'y', label: 'Y 位置', value: vals.y, suffix: '' },
-                    { prop: 'scaleX', label: '缩放 X', value: vals.scaleX, suffix: '%' },
-                    { prop: 'scaleY', label: '缩放 Y', value: vals.scaleY, suffix: '%' },
-                    { prop: 'rotation', label: '旋转', value: vals.rotation, suffix: '°' },
-                    { prop: 'opacity', label: '不透明度', value: vals.opacity, suffix: '%' },
-                ];
-                let html =
-                    `<div style="display:flex;align-items:center;gap:6px;padding:2px 0;font-size:10px;color:var(--text-secondary);">
-                        <span style="font-weight:600;">${layer.name}</span>
-                        <span style="color:var(--text-dim);">(${layer.type})</span>
-                        <span style="margin-left:auto;font-size:9px;color:var(--text-dim);">锚点: ${Math.round(layer.anchorX*100)}%, ${Math.round(layer.anchorY*100)}%</span>
-                    </div>`;
-                props.forEach(p => {
-                    const swOn = layer.stopwatch[p.prop];
-                    const hasKF = layer.keyframes[p.prop] && layer.keyframes[p.prop].length > 0;
-                    html += `<div class="prop-row">
-                        <span class="prop-label">${p.label}</span>
-                        <input type="number" class="prop-value" data-prop="${p.prop}" value="${p.value}" step="${p.prop === 'opacity' ? 1 : (p.prop === 'rotation' ? 0.5 : 1)}" />
-                        <span class="prop-suffix" style="color:var(--text-dim);font-size:9px;width:14px;">${p.suffix}</span>
-                        <span class="stopwatch ${swOn ? 'on' : ''}" data-prop="${p.prop}" title="开启关键帧">⏱</span>
-                        <span class="keyframe-dot ${(swOn && hasKF) ? 'visible' : ''}" style="${(swOn && hasKF) ? 'opacity:1;' : ''}"></span>
-                    </div>`;
-                });
-                el.innerHTML = html;
+                this.timelineEmptyEl.classList.add('hidden');
 
-                el.querySelectorAll('.stopwatch').forEach(el => {
-                    el.addEventListener('click', (e) => {
-                        const prop = e.target.dataset.prop;
-                        const layer = this.comp.getSelectedLayer();
-                        if (!layer) return;
-                        const wasOn = layer.stopwatch[prop];
-                        layer.toggleStopwatch(prop);
-                        if (!wasOn) {
-                            const time = this.comp.currentTime;
-                            const val = layer[prop];
-                            layer.setKeyframe(prop, time, val);
+                this.comp.getDisplayRows().forEach(row => {
+                    const div = document.createElement('div');
+                    if (row.kind === 'layer') {
+                        const L = row.layer;
+                        div.className = 'layer-row' + (L.selected ? ' selected' : '');
+                        div.dataset.layerId = L.id;
+                        div.innerHTML =
+                            '<span class="expand-arrow" data-act="expand">' + (L.expanded ? '▼' : '▶') + '</span>' +
+                            '<span class="vis-toggle ' + (L.visible ? 'on' : '') + '" data-toggle="vis">👁</span>' +
+                            '<span class="audio-toggle ' + (L.audioOn ? 'on' : '') + '" data-toggle="audio">🔊</span>' +
+                            '<span class="solo-toggle ' + (L.solo ? 'on' : '') + '" data-toggle="solo">◎</span>' +
+                            '<span class="lock-toggle ' + (L.locked ? 'on' : '') + '" data-toggle="lock">🔒</span>' +
+                            '<span class="layer-type-badge">' + L.type[0].toUpperCase() + '</span>' +
+                            '<span class="layer-name">' + escapeHtml(L.name) + '</span>';
+                        if (L.selected) {
+                            div.style.borderLeft = '3px solid var(--accent)';
+                            div.style.background = 'rgba(137,180,250,0.09)';
                         }
-                        this._updateLayerProperties();
-                        this._updateLayerStack();
-                        this._requestRedraw();
-                    });
-                });
-
-                el.querySelectorAll('.prop-value').forEach(input => {
-                    input.addEventListener('change', (e) => {
-                        const prop = e.target.dataset.prop;
-                        const layer = this.comp.getSelectedLayer();
-                        if (!layer) return;
-                        const val = parseFloat(e.target.value);
-                        if (isNaN(val)) return;
-                        let realVal = val;
-                        if (prop === 'scaleX' || prop === 'scaleY') realVal = val / 100;
-                        if (prop === 'opacity') realVal = val / 100;
-                        if (prop === 'rotation') realVal = val;
-                        layer.setProp(prop, realVal, this.comp.currentTime);
-                        this._updateLayerProperties();
-                        this._updateLayerStack();
-                        this._requestRedraw();
-                    });
-                    input.addEventListener('input', (e) => {
-                        const prop = e.target.dataset.prop;
-                        const layer = this.comp.getSelectedLayer();
-                        if (!layer) return;
-                        const val = parseFloat(e.target.value);
-                        if (isNaN(val)) return;
-                        let realVal = val;
-                        if (prop === 'scaleX' || prop === 'scaleY') realVal = val / 100;
-                        if (prop === 'opacity') realVal = val / 100;
-                        if (prop === 'rotation') realVal = val;
-                        layer.setProp(prop, realVal, this.comp.currentTime);
-                        this._requestRedraw();
-                    });
+                    } else if (row.kind === 'prop') {
+                        div.className = 'layer-row sub-row';
+                        div.dataset.layerId = row.layer.id;
+                        div.dataset.prop = row.prop;
+                        const on = row.layer.isAnimated(row.prop);
+                        div.innerHTML = '<span class="sub-name">' + PROP_LABELS[row.prop] + '</span>' +
+                            '<span class="sub-watch ' + (on ? 'on' : '') + '" data-act="watch" data-prop="' + row.prop + '">⏱</span>';
+                    } else {
+                        div.className = 'layer-row sub-row';
+                        div.dataset.layerId = row.layer.id;
+                        div.dataset.effectIndex = row.index;
+                        const pk = effectPrimaryKey(row.effect.id);
+                        const on = row.effect.keyframes[pk] && row.effect.keyframes[pk].animated;
+                        div.innerHTML = '<span class="sub-name">' + row.effect.icon + ' ' + row.effect.name + '</span>' +
+                            '<span class="sub-watch ' + (on ? 'on' : '') + '" data-act="fxwatch" data-index="' + row.index + '" data-param="' + pk + '">⏱</span>';
+                    }
+                    el.appendChild(div);
                 });
             }
 
-            // ---- 导入媒体 ----
+            _onLayerStackClick(e) {
+                const row = e.target.closest('.layer-row');
+                if (!row) return;
+                const layer = this.comp.getLayer(parseInt(row.dataset.layerId));
+                if (!layer) return;
+                const act = e.target.dataset.act;
+                const toggle = e.target.dataset.toggle;
+
+                if (act === 'expand') {
+                    layer.expanded = !layer.expanded;
+                    this._updateLayerStack();
+                    this._requestRedraw();
+                    return;
+                }
+                if (act === 'watch') {
+                    const prop = e.target.dataset.prop;
+                    this._togglePropWatch(layer, prop);
+                    return;
+                }
+                if (act === 'fxwatch') {
+                    const fx = layer.effects[parseInt(e.target.dataset.index)];
+                    if (fx) this._toggleFxWatch(fx, e.target.dataset.param);
+                    return;
+                }
+                if (toggle) {
+                    if (toggle === 'vis') layer.visible = !layer.visible;
+                    if (toggle === 'audio') layer.audioOn = !layer.audioOn;
+                    if (toggle === 'solo') layer.solo = !layer.solo;
+                    if (toggle === 'lock') layer.locked = !layer.locked;
+                    this._updateLayerStack();
+                    this._requestRedraw();
+                    return;
+                }
+                this.comp.selectLayer(layer.id);
+                this._updateLayerStack();
+                this._updateLayerProperties();
+                this._requestRedraw();
+            }
+
+            // ---------- 属性检查器 ----------
+            _updateLayerProperties() {
+                this._closeFxMenu();
+                const layer = this.comp.getSelectedLayer();
+                if (!layer) {
+                    this.inspectorEmptyEl.classList.remove('hidden');
+                    this.inspectorContentEl.innerHTML = '';
+                    return;
+                }
+                this.inspectorEmptyEl.classList.add('hidden');
+                const time = this.comp.currentTime;
+
+                let html = '<div class="inspector-header">' +
+                    '<span class="name">' + escapeHtml(layer.name) + '</span>' +
+                    '<span class="tag">' + layer.type + '</span>' +
+                    '<span class="header-tools">' +
+                        '<span data-act="header-expand" title="展开/折叠">' + (layer.expanded ? '▼' : '▶') + '</span>' +
+                        '<span data-act="header-dup" title="复制图层">⧉</span>' +
+                        '<span data-act="header-del" title="删除图层">✕</span>' +
+                    '</span></div>';
+
+                html += '<div class="group-title" data-group="transform"><span class="arrow">' +
+                    (layer.showTransform ? '▼' : '▶') + '</span> 变换</div>';
+                if (layer.showTransform) {
+                    ['x', 'y', 'scaleX', 'scaleY', 'rotation', 'opacity'].forEach(prop => {
+                        const raw = layer.getValue(prop, time);
+                        const pct = prop === 'scaleX' || prop === 'scaleY' || prop === 'opacity';
+                        const disp = pct ? Math.round(raw * 100) : round1(raw);
+                        const unit = pct ? '%' : (prop === 'rotation' ? '°' : '');
+                        const on = layer.isAnimated(prop);
+                        const step = prop === 'rotation' ? 0.5 : 1;
+                        html += '<div class="prop-row">' +
+                            '<span class="prop-label">' + PROP_LABELS[prop] + '</span>' +
+                            '<input type="number" class="prop-value" data-prop="' + prop + '" value="' + disp + '" step="' + step + '" />' +
+                            '<span class="prop-unit">' + unit + '</span>' +
+                            '<span class="stopwatch ' + (on ? 'on' : '') + '" data-act="watch" data-prop="' + prop + '" title="关键帧">⏱</span>' +
+                            '<span class="kf-dot ' + (on ? 'visible' : '') + '"></span>' +
+                            '</div>';
+                    });
+                }
+
+                html += '<div class="group-title" data-group="effects"><span class="arrow">' +
+                    (layer.showEffects ? '▼' : '▶') + '</span> 效果 (' + layer.effects.length + ')</div>';
+                if (layer.showEffects) {
+                    if (!layer.effects.length) {
+                        html += '<div class="fx-empty-hint">尚无效果，从上方效果库添加</div>';
+                    } else {
+                        layer.effects.forEach((fx, i) => { html += this._fxCardHtml(fx, i, time); });
+                    }
+                }
+                this.inspectorContentEl.innerHTML = html;
+            }
+
+            _fxCardHtml(fx, index, time) {
+                let h = '<div class="fx-card" data-fx="' + index + '" draggable="true">' +
+                    '<div class="fx-head">' +
+                        '<span class="fx-arrow" data-act="fx-fold">' + (fx.expanded ? '▼' : '▶') + '</span>' +
+                        '<span class="fx-check" data-act="fx-toggle">' + (fx.enabled ? '☑' : '☐') + '</span>' +
+                        '<span class="fx-name">' + fx.name + '</span>' +
+                        '<span class="fx-menu" data-act="fx-menu" title="更多">⋮</span>' +
+                    '</div>';
+                if (fx.expanded) {
+                    h += '<div class="fx-body">';
+                    Object.keys(fx.params).forEach(key => {
+                        const p = fx.params[key];
+                        const v = effectParamValue(fx, key, time);
+                        const on = p.anim.animated;
+                        const watch = '<span class="stopwatch ' + (on ? 'on' : '') + '" data-act="fx-watch" data-fx="' + index + '" data-param="' + key + '" title="关键帧">⏱</span>';
+                        const label = '<span class="p-label" data-act="reset" data-fx="' + index + '" data-param="' + key + '" title="Alt+点击重置">' + p.label + '</span>';
+                        if (p.type === 'number') {
+                            h += '<div class="fx-param">' + label +
+                                '<input type="range" class="fx-range" data-fx="' + index + '" data-param="' + key + '" min="' + p.min + '" max="' + p.max + '" step="' + p.step + '" value="' + v + '" />' +
+                                '<input type="number" class="fx-value" data-fx="' + index + '" data-param="' + key + '" value="' + round1(v) + '" />' +
+                                '<span class="p-unit">' + p.unit + '</span>' + watch + '</div>';
+                        } else if (p.type === 'enum') {
+                            h += '<div class="fx-param">' + label + '<select data-fx="' + index + '" data-param="' + key + '">' +
+                                p.options.map(o => '<option value="' + o[0] + '"' + (v === o[0] ? ' selected' : '') + '>' + o[1] + '</option>').join('') +
+                                '</select><span style="flex:1"></span>' + watch + '</div>';
+                        } else if (p.type === 'color') {
+                            h += '<div class="fx-param">' + label +
+                                '<input type="color" data-fx="' + index + '" data-param="' + key + '" value="' + v + '" />' +
+                                '<span style="flex:1"></span>' + watch + '</div>';
+                        }
+                    });
+                    h += '</div>';
+                }
+                return h + '</div>';
+            }
+
+            /** 播放时只刷新数值，不重建 DOM（保持焦点） */
+            _updateInspectorValues() {
+                const layer = this.comp.getSelectedLayer();
+                if (!layer) return;
+                const time = this.comp.currentTime;
+                this.inspectorContentEl.querySelectorAll('input.prop-value[data-prop]').forEach(inp => {
+                    if (document.activeElement === inp) return;
+                    const prop = inp.dataset.prop;
+                    const raw = layer.getValue(prop, time);
+                    const pct = prop === 'scaleX' || prop === 'scaleY' || prop === 'opacity';
+                    inp.value = pct ? Math.round(raw * 100) : round1(raw);
+                });
+                this.inspectorContentEl.querySelectorAll('[data-fx][data-param]').forEach(inp => {
+                    if (document.activeElement === inp) return;
+                    const fx = layer.effects[parseInt(inp.dataset.fx)];
+                    if (!fx || inp.tagName === 'SELECT') return;
+                    const v = effectParamValue(fx, inp.dataset.param, time);
+                    if (typeof v === 'number' || typeof v === 'string') {
+                        if (inp.type === 'range' || inp.type === 'number') inp.value = round1(v);
+                    }
+                });
+            }
+
+            _togglePropWatch(layer, prop) {
+                const wasOn = layer.isAnimated(prop);
+                const on = layer.toggleStopwatch(prop, this.comp.currentTime);
+                if (on && !wasOn) layer.setKeyframe(prop, this.comp.currentTime, layer.getValue(prop, this.comp.currentTime));
+                this._updateLayerStack();
+                this._updateLayerProperties();
+                this._requestRedraw();
+            }
+
+            _toggleFxWatch(fx, key) {
+                const ap = fx.keyframes[key];
+                if (!ap) return;
+                ap.animated = !ap.animated;
+                if (ap.animated) {
+                    setAnimatedKeyframe(ap, this.comp.currentTime, ap.value);
+                } else {
+                    ap.value = cloneValue(evaluateProperty(ap, this.comp.currentTime));
+                    ap.keyframes.length = 0;
+                }
+                this._updateLayerStack();
+                this._updateLayerProperties();
+                this._requestRedraw();
+            }
+
+            _onInspectorClick(e) {
+                const layer = this.comp.getSelectedLayer();
+                if (!layer) return;
+                const act = e.target.dataset.act;
+                const group = e.target.dataset.group;
+                const time = this.comp.currentTime;
+
+                if (group === 'transform') {
+                    layer.showTransform = !layer.showTransform;
+                    this._updateLayerProperties();
+                    return;
+                }
+                if (group === 'effects') {
+                    layer.showEffects = !layer.showEffects;
+                    this._updateLayerProperties();
+                    return;
+                }
+                if (act === 'header-expand') {
+                    layer.expanded = !layer.expanded;
+                    this._updateLayerStack();
+                    this._updateLayerProperties();
+                    this._requestRedraw();
+                    return;
+                }
+                if (act === 'header-dup') {
+                    const clone = layer.clone();
+                    this.comp.addLayer(clone);
+                    this._updateLayerStack(); this._updateLayerProperties(); this._requestRedraw();
+                    return;
+                }
+                if (act === 'header-del') {
+                    if (layer.id !== this.comp.layers[0].id) {
+                        this.comp.removeLayer(layer.id);
+                        this._updateLayerStack(); this._updateLayerProperties(); this._requestRedraw();
+                    }
+                    return;
+                }
+                if (act === 'watch') {
+                    this._togglePropWatch(layer, e.target.dataset.prop);
+                    return;
+                }
+                if (act === 'fx-fold') {
+                    const fx = layer.effects[parseInt(e.target.closest('.fx-card').dataset.fx)];
+                    if (fx) { fx.expanded = !fx.expanded; this._updateLayerProperties(); }
+                    return;
+                }
+                if (act === 'fx-toggle') {
+                    const fx = layer.effects[parseInt(e.target.closest('.fx-card').dataset.fx)];
+                    if (fx) { fx.enabled = !fx.enabled; this._updateLayerProperties(); this._requestRedraw(); }
+                    return;
+                }
+                if (act === 'fx-watch') {
+                    const fx = layer.effects[parseInt(e.target.dataset.fx)];
+                    if (fx) this._toggleFxWatch(fx, e.target.dataset.param);
+                    return;
+                }
+                if (act === 'reset') {
+                    if (!e.altKey) return;
+                    const fx = layer.effects[parseInt(e.target.dataset.fx)];
+                    if (!fx) return;
+                    const key = e.target.dataset.param;
+                    const def = EFFECT_DEFS[fx.id].params[key];
+                    const ap = fx.keyframes[key];
+                    ap.value = cloneValue(def.value);
+                    if (ap.animated) setAnimatedKeyframe(ap, time, ap.value);
+                    fx.params[key].value = cloneValue(def.value);
+                    this._updateLayerProperties();
+                    this._requestRedraw();
+                    return;
+                }
+                if (act === 'fx-menu') {
+                    this._showFxMenu(e, parseInt(e.target.closest('.fx-card').dataset.fx));
+                }
+            }
+
+            _onInspectorInput(e) {
+                const layer = this.comp.getSelectedLayer();
+                if (!layer) return;
+                const time = this.comp.currentTime;
+                const prop = e.target.dataset.prop;
+                if (prop) {
+                    const raw = parseFloat(e.target.value);
+                    if (isNaN(raw)) return;
+                    const pct = prop === 'scaleX' || prop === 'scaleY' || prop === 'opacity';
+                    layer.setProp(prop, pct ? raw / 100 : raw, time);
+                    this._requestRedraw();
+                    return;
+                }
+                const key = e.target.dataset.param;
+                if (!key) return;
+                const fx = layer.effects[parseInt(e.target.dataset.fx)];
+                if (!fx) return;
+                let val;
+                if (e.target.type === 'checkbox') val = e.target.checked;
+                else if (e.target.tagName === 'SELECT') val = e.target.value;
+                else if (e.target.type === 'color') val = e.target.value;
+                else {
+                    val = parseFloat(e.target.value);
+                    if (isNaN(val)) return;
+                }
+                fx.params[key].value = cloneValue(val);
+                const ap = fx.keyframes[key];
+                if (ap) {
+                    if (ap.animated) setAnimatedKeyframe(ap, time, val);
+                    else ap.value = cloneValue(val);
+                }
+                // 同步滑块与数字框
+                const card = e.target.closest('.fx-card');
+                if (card) {
+                    if (e.target.classList.contains('fx-range')) {
+                        const num = card.querySelector('input.fx-value[data-param="' + key + '"]');
+                        if (num && document.activeElement !== num) num.value = round1(val);
+                    } else if (e.target.classList.contains('fx-value')) {
+                        const rng = card.querySelector('input.fx-range[data-param="' + key + '"]');
+                        if (rng) rng.value = val;
+                    }
+                }
+                this._requestRedraw();
+            }
+
+            _closeFxMenu() {
+                if (this.activeFxMenu) { this.activeFxMenu.remove(); this.activeFxMenu = null; }
+            }
+
+            _showFxMenu(e, index) {
+                this._closeFxMenu();
+                const menu = document.createElement('div');
+                menu.className = 'fx-menu-pop';
+                menu.innerHTML =
+                    '<div data-cmd="copy">复制效果</div>' +
+                    '<div data-cmd="paste">粘贴效果</div>' +
+                    '<div data-cmd="up">上移</div>' +
+                    '<div data-cmd="down">下移</div>' +
+                    '<div data-cmd="reset">重置参数</div>' +
+                    '<div data-cmd="delete">删除效果</div>';
+                document.body.appendChild(menu);
+                const r = e.target.getBoundingClientRect();
+                menu.style.left = Math.min(r.left, window.innerWidth - 140) + 'px';
+                menu.style.top = (r.bottom + 3) + 'px';
+                menu.addEventListener('click', ev => {
+                    const cmd = ev.target.dataset.cmd;
+                    if (cmd) this._executeFxMenu(cmd, index);
+                    this._closeFxMenu();
+                });
+                this.activeFxMenu = menu;
+            }
+
+            _executeFxMenu(cmd, index) {
+                const layer = this.comp.getSelectedLayer();
+                if (!layer || !layer.effects[index]) return;
+                if (cmd === 'copy') {
+                    this.fxClipboard = cloneEffect(layer.effects[index]);
+                } else if (cmd === 'paste') {
+                    if (this.fxClipboard) {
+                        layer.effects.splice(index + 1, 0, cloneEffect(this.fxClipboard));
+                    }
+                } else if (cmd === 'up' && index > 0) {
+                    const arr = layer.effects;
+                    [arr[index - 1], arr[index]] = [arr[index], arr[index - 1]];
+                } else if (cmd === 'down' && index < layer.effects.length - 1) {
+                    const arr = layer.effects;
+                    [arr[index + 1], arr[index]] = [arr[index], arr[index + 1]];
+                } else if (cmd === 'reset') {
+                    const fx = layer.effects[index];
+                    Object.keys(fx.params).forEach(k => {
+                        const def = EFFECT_DEFS[fx.id].params[k];
+                        fx.params[k].value = cloneValue(def.value);
+                        fx.keyframes[k].value = cloneValue(def.value);
+                        fx.keyframes[k].keyframes.length = 0;
+                        fx.keyframes[k].animated = false;
+                    });
+                } else if (cmd === 'delete') {
+                    layer.effects.splice(index, 1);
+                }
+                this._updateLayerStack();
+                this._updateLayerProperties();
+                this._requestRedraw();
+            }
+
+            _onFxDragStart(e) {
+                const card = e.target.closest('.fx-card');
+                if (!card) return;
+                this._fxDragIndex = parseInt(card.dataset.fx);
+                card.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                try { e.dataTransfer.setData('text/plain', String(this._fxDragIndex)); } catch (err) { /* ignore */ }
+            }
+
+            _onFxDrop(e) {
+                const target = e.target.closest('.fx-card');
+                if (!target || this._fxDragIndex == null) return;
+                e.preventDefault();
+                const layer = this.comp.getSelectedLayer();
+                if (!layer) return;
+                const from = this._fxDragIndex;
+                const to = parseInt(target.dataset.fx);
+                target.classList.remove('drag-over');
+                if (from !== to && layer.effects[from] && layer.effects[to]) {
+                    const moved = layer.effects.splice(from, 1)[0];
+                    layer.effects.splice(to, 0, moved);
+                }
+                this._fxDragIndex = null;
+                this._updateLayerStack();
+                this._updateLayerProperties();
+                this._requestRedraw();
+            }
+
             _onImportMedia(e) {
                 const files = Array.from(e.target.files);
                 files.forEach(file => {
@@ -2032,6 +3003,16 @@
                         console.log('不支持的文件类型');
                     }
                 });
+                // 更新项目面板
+                if (files.length) {
+                    this.importedCount += files.length;
+                    this.projectEmptyEl.classList.add('hidden');
+                    this.assetListEl.innerHTML = files.map(f =>
+                        '<div class="asset-item"><span class="icon">' +
+                        (f.type.startsWith('video/') ? '🎬' : '🖼️') + '</span>' +
+                        escapeHtml(f.name) + '</div>'
+                    ).join('');
+                }
                 // 重置 input 以便重复导入
                 e.target.value = '';
             }
@@ -2115,9 +3096,14 @@
             // ---- 事件处理 ----
             _onViewportMouseDown(e) {
                 const rect = this.viewportContainer.getBoundingClientRect();
-                const mx = e.clientX - rect.left;
-                const my = e.clientY - rect.top;
-
+                const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+                if (e.button === 1 || this.spaceDown) {
+                    this.isPanning = true;
+                    this.panStartX = mx; this.panStartY = my;
+                    this.panOrigX = this.renderer.panX; this.panOrigY = this.renderer.panY;
+                    e.preventDefault();
+                    return;
+                }
                 const layer = this.renderer.hitTest(mx, my);
                 if (layer) {
                     this.comp.selectLayer(layer.id);
@@ -2126,164 +3112,188 @@
                     this._requestRedraw();
                     if (!layer.locked) {
                         this.isDraggingLayer = true;
-                        this.dragStartX = mx;
-                        this.dragStartY = my;
-                        this.dragLayerOrigX = layer.x;
-                        this.dragLayerOrigY = layer.y;
+                        this.dragStartX = mx; this.dragStartY = my;
+                        this.dragLayerOrigX = layer.x; this.dragLayerOrigY = layer.y;
                         this.dragLayer = layer;
                         e.preventDefault();
                     }
                 } else {
                     this.isPanning = true;
-                    this.panStartX = mx;
-                    this.panStartY = my;
-                    this.panOrigX = this.renderer.panX;
-                    this.panOrigY = this.renderer.panY;
+                    this.panStartX = mx; this.panStartY = my;
+                    this.panOrigX = this.renderer.panX; this.panOrigY = this.renderer.panY;
                     e.preventDefault();
                 }
             }
 
             _onViewportMouseMove(e) {
                 const rect = this.viewportContainer.getBoundingClientRect();
-                const mx = e.clientX - rect.left;
-                const my = e.clientY - rect.top;
-                const compCoords = this.renderer.screenToComp(mx, my);
-                this.cursorCoordsEl.textContent = `${Math.round(compCoords.x)}, ${Math.round(compCoords.y)}`;
-
+                const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+                const c = this.renderer.screenToComp(mx, my);
+                this.cursorCoordsEl.textContent = Math.round(c.x) + ', ' + Math.round(c.y);
                 if (this.isDraggingLayer && this.dragLayer) {
                     const dx = (mx - this.dragStartX) / this.renderer.zoom;
                     const dy = (my - this.dragStartY) / this.renderer.zoom;
-                    const newX = this.dragLayerOrigX + dx;
-                    const newY = this.dragLayerOrigY + dy;
-                    this.dragLayer.setProp('x', newX, this.comp.currentTime);
-                    this.dragLayer.setProp('y', newY, this.comp.currentTime);
+                    this.dragLayer.setProp('x', this.dragLayerOrigX + dx, this.comp.currentTime);
+                    this.dragLayer.setProp('y', this.dragLayerOrigY + dy, this.comp.currentTime);
                     this._updateLayerProperties();
                     this._requestRedraw();
                 } else if (this.isPanning) {
-                    const dx = mx - this.panStartX;
-                    const dy = my - this.panStartY;
-                    this.renderer.panX = this.panOrigX + dx;
-                    this.renderer.panY = this.panOrigY + dy;
+                    this.renderer.panX = this.panOrigX + (mx - this.panStartX);
+                    this.renderer.panY = this.panOrigY + (my - this.panStartY);
+                    this.zoomMode = 'custom';
                     this._requestRedraw();
                 } else {
-                    const layer = this.renderer.hitTest(mx, my);
-                    this.viewportContainer.style.cursor = layer ? 'pointer' : 'default';
+                    this.viewportContainer.style.cursor = this.spaceDown ? 'grab' : (this.renderer.hitTest(mx, my) ? 'pointer' : 'default');
                 }
             }
 
             _onViewportMouseUp(e) {
-                if (this.isDraggingLayer) { this.isDraggingLayer = false;
-                    this.dragLayer = null; }
-                if (this.isPanning) { this.isPanning = false; }
+                this.isDraggingLayer = false;
+                this.dragLayer = null;
+                this.isPanning = false;
             }
 
-            _onViewportDblClick(e) { /* 预留 */ }
+            _onViewportDblClick(e) { /* 预留：文本编辑 */ }
+
+            // ---------- 时间轴交互 ----------
+            _rowAnimatedProps(row) {
+                const aps = [];
+                if (!row) return aps;
+                if (row.kind === 'layer') {
+                    Object.keys(row.layer.properties).forEach(k => aps.push(row.layer.properties[k]));
+                    row.layer.effects.forEach(fx => Object.keys(fx.keyframes).forEach(k => aps.push(fx.keyframes[k])));
+                } else if (row.kind === 'prop') {
+                    const m = PROP_MAP[row.prop];
+                    if (m) aps.push(row.layer.properties[m[0]]);
+                } else {
+                    const pk = effectPrimaryKey(row.effect.id);
+                    if (pk && row.effect.keyframes[pk]) aps.push(row.effect.keyframes[pk]);
+                }
+                return aps.filter(ap => ap && ap.animated && ap.keyframes.length);
+            }
+
+            _hitKeyframe(row, mx) {
+                let best = null, bestDist = 7;
+                this._rowAnimatedProps(row).forEach(ap => {
+                    ap.keyframes.forEach(kf => {
+                        const d = Math.abs(this.timeline.timeToX(kf.time) - mx);
+                        if (d < bestDist) { bestDist = d; best = { ap: ap, kf: kf }; }
+                    });
+                });
+                return best;
+            }
 
             _onTimelineMouseDown(e) {
                 const rect = this.timelineBodyEl.getBoundingClientRect();
-                const my = e.clientY - rect.top;
-                const mx = e.clientX - rect.left;
+                const my = e.clientY - rect.top, mx = e.clientX - rect.left;
                 const phx = this.timeline.timeToX(this.comp.currentTime);
                 if (Math.abs(mx - phx) < 8) {
                     this.isDraggingPlayhead = true;
                     e.preventDefault();
                     return;
                 }
-                const layer = this.timeline.trackAtY(my);
-                if (layer) {
-                    this.comp.selectLayer(layer.id);
-                    this._updateLayerStack();
-                    this._updateLayerProperties();
-                    this._requestRedraw();
-                    const time = clamp(this.timeline.xToTime(mx), 0, this.comp.duration);
-                    this.comp.setTime(time);
-                    this._updateTimeDisplay();
-                    this._updatePlayheadPosition();
-                    this._updateLayerProperties();
-                    this._requestRedraw();
+                const row = this.timeline.rowAtY(my);
+                if (!row) return;
+
+                const hit = this._hitKeyframe(row, mx);
+                if (hit) {
+                    this._rowAnimatedProps(row).forEach(ap => ap.keyframes.forEach(k => { k.selected = false; }));
+                    hit.kf.selected = true;
+                    this.isDraggingKeyframe = true;
+                    this.dragKeyframeInfo = hit;
+                    this.comp.setTime(hit.kf.time);
+                    this._seekRefresh();
+                    e.preventDefault();
+                    return;
                 }
+
+                if (row.kind === 'layer') {
+                    if (mx < 14) {
+                        row.layer.expanded = !row.layer.expanded;
+                        this._updateLayerStack();
+                        this._requestRedraw();
+                        return;
+                    }
+                    this.comp.selectLayer(row.layer.id);
+                } else {
+                    this.comp.selectLayer(row.layer.id);
+                }
+                const time = clamp(this.timeline.xToTime(mx), 0, this.comp.duration);
+                this.comp.setTime(time);
+                this._updateLayerStack();
+                this._updateLayerProperties();
+                this._seekRefresh();
             }
 
             _onTimelineMouseMove(e) {
-                if (!this.isDraggingPlayhead) return;
                 const rect = this.timelineBodyEl.getBoundingClientRect();
                 const mx = e.clientX - rect.left;
-                const time = clamp(this.timeline.xToTime(mx), 0, this.comp.duration);
-                this.comp.setTime(time);
-                this._updateTimeDisplay();
-                this._updatePlayheadPosition();
-                this._updateLayerProperties();
-                this._requestRedraw();
+                if (this.isDraggingPlayhead) {
+                    this.comp.setTime(clamp(this.timeline.xToTime(mx), 0, this.comp.duration));
+                    this._seekRefresh();
+                } else if (this.isDraggingKeyframe && this.dragKeyframeInfo) {
+                    const kf = this.dragKeyframeInfo.kf;
+                    kf.time = clamp(this.timeline.xToTime(mx), 0, this.comp.duration);
+                    this.dragKeyframeInfo.ap.keyframes.sort((a, b) => a.time - b.time);
+                    this.comp.setTime(kf.time);
+                    this._seekRefresh();
+                }
             }
 
-            _onTimelineMouseUp(e) { this.isDraggingPlayhead = false; }
+            _onTimelineMouseUp(e) {
+                this.isDraggingPlayhead = false;
+                this.isDraggingKeyframe = false;
+                this.dragKeyframeInfo = null;
+            }
 
             _onRulerClick(e) {
                 const rect = document.getElementById('timeline-ruler').getBoundingClientRect();
                 const mx = e.clientX - rect.left;
-                const time = clamp(this.timeline.xToTime(mx), 0, this.comp.duration);
-                this.comp.setTime(time);
-                this._updateTimeDisplay();
-                this._updatePlayheadPosition();
-                this._updateLayerProperties();
-                this._requestRedraw();
-            }
-
-            _onLayerStackClick(e) {
-                const row = e.target.closest('.layer-row');
-                if (!row) return;
-                const id = parseInt(row.dataset.layerId);
-                const layer = this.comp.getLayer(id);
-                if (layer) {
-                    this.comp.selectLayer(id);
-                    this._updateLayerStack();
-                    this._updateLayerProperties();
-                    this._requestRedraw();
-                }
+                this.comp.setTime(clamp(this.timeline.xToTime(mx), 0, this.comp.duration));
+                this._seekRefresh();
             }
 
             _onKeyDown(e) {
+                const tag = (e.target.tagName || '').toLowerCase();
+                const typing = tag === 'input' || tag === 'select' || tag === 'textarea';
                 if (e.key === ' ') {
+                    this.spaceDown = true;
+                    if (typing) return;
                     e.preventDefault();
                     this.playBtnEl.click();
+                }
+                if (typing) return;
+                if ((e.ctrlKey || e.metaKey) && (e.key === 'd' || e.key === 'D')) {
+                    e.preventDefault();
+                    const layer = this.comp.getSelectedLayer();
+                    if (layer) {
+                        this.comp.addLayer(layer.clone());
+                        this._updateLayerStack(); this._updateLayerProperties(); this._requestRedraw();
+                    }
                 }
                 if (e.key === 'Delete' || e.key === 'Backspace') {
                     const layer = this.comp.getSelectedLayer();
                     if (layer && layer.id !== this.comp.layers[0].id) {
                         this.comp.removeLayer(layer.id);
-                        this._updateLayerStack();
-                        this._updateLayerProperties();
-                        this._requestRedraw();
-                    }
-                }
-                if (e.ctrl && e.key === 'd') {
-                    e.preventDefault();
-                    const layer = this.comp.getSelectedLayer();
-                    if (layer) {
-                        const clone = layer.clone();
-                        this.comp.addLayer(clone);
-                        this._updateLayerStack();
-                        this._updateLayerProperties();
-                        this._requestRedraw();
+                        this._updateLayerStack(); this._updateLayerProperties(); this._requestRedraw();
                     }
                 }
                 if (e.key === 'ArrowUp') {
                     const layer = this.comp.getSelectedLayer();
-                    if (layer) { this.comp.moveLayerUp(layer.id);
-                        this._updateLayerStack();
-                        this._requestRedraw(); }
+                    if (layer) this.comp.moveLayerUp(layer.id);
                     e.preventDefault();
+                    this._updateLayerStack(); this._requestRedraw();
                 }
                 if (e.key === 'ArrowDown') {
                     const layer = this.comp.getSelectedLayer();
-                    if (layer) { this.comp.moveLayerDown(layer.id);
-                        this._updateLayerStack();
-                        this._requestRedraw(); }
+                    if (layer) this.comp.moveLayerDown(layer.id);
                     e.preventDefault();
+                    this._updateLayerStack(); this._requestRedraw();
                 }
             }
 
-            _onPropChange(e) { /* 已在上层处理 */ }
+            // ---- 导入媒体 ----
+
         }
 
         // ===========================================================
