@@ -1027,7 +1027,7 @@
                 <span class="tab" data-tab="info">信息</span>
             </div>
             <div id="project-panel">
-                <button class="import-btn" id="import-btn">📥 导入媒体</button>
+                <button class="import-btn" id="import-btn">📥 导入媒体 / WebM</button>
                 <div class="project-tree">
                     <div class="folder" data-folder="comp"><span class="icon">📁</span> 合成</div>
                     <div class="file" data-comp="1"><span class="icon">🎬</span> 合成 1</div>
@@ -1035,7 +1035,7 @@
                 <div id="project-empty" class="empty-state compact">
                     <div class="empty-icon">📁</div>
                     <div class="empty-title">导入素材</div>
-                    <div class="empty-desc">拖拽文件到此处<br>或点击"导入媒体"<br><small>支持 PNG / JPG / SVG / GIF / MP4</small></div>
+                    <div class="empty-desc">拖拽文件到此处<br>或点击"导入媒体"<br><small>支持 PNG / JPG / SVG / GIF / MP4 / WebM</small></div>
                 </div>
                 <div id="asset-list"></div>
             </div>
@@ -1139,7 +1139,7 @@
         </div>
     </div>
 
-    <input type="file" id="import-media" accept="image/*,video/*" multiple />
+    <input type="file" id="import-media" accept="image/*,video/webm,video/mp4,video/*,.webm,.mp4,.mov,.m4v,.ogv" multiple />
 
     <script>
         /* ===========================================================
@@ -2295,7 +2295,7 @@
         const APP_MENUS = {
             file: [
                 { label: '新建项目', key: 'Ctrl+N', cmd: 'new' },
-                { label: '导入媒体…', key: 'Ctrl+I', cmd: 'import' },
+                { label: '导入媒体 / WebM…', key: 'Ctrl+I', cmd: 'import' },
                 { sep: true },
                 { label: '导出 WebM…', key: 'Ctrl+E', cmd: 'export' },
             ],
@@ -2461,11 +2461,13 @@
 
                 this.playBtnEl.addEventListener('click', () => {
                     this.comp.togglePlay();
+                    this._syncVideoLayers(true);
                     this.playBtnEl.textContent = this.comp.isPlaying ? '⏸' : '▶';
                     this.playBtnEl.classList.toggle('active', this.comp.isPlaying);
                 });
                 this.stopBtnEl.addEventListener('click', () => {
                     this.comp.stop();
+                    this._syncVideoLayers(true);
                     this.playBtnEl.textContent = '▶';
                     this.playBtnEl.classList.remove('active');
                     this._updateTimeDisplay();
@@ -2629,11 +2631,7 @@
                         this._updateTimeDisplay();
                         this._updatePlayheadPosition();
                         this._updateInspectorValues();
-                        this.comp.layers.forEach(layer => {
-                            if (layer.type === 'video' && layer.videoElement && layer.videoElement.readyState >= 2) {
-                                try { layer.videoElement.currentTime = this.comp.currentTime; } catch (e) { /* ignore */ }
-                            }
-                        });
+                        this._syncVideoLayers();
                         if (!this.comp.isPlaying) {
                             this.playBtnEl.textContent = '▶';
                             this.playBtnEl.classList.remove('active');
@@ -2664,6 +2662,7 @@
             _seekRefresh() {
                 this._updateTimeDisplay();
                 this._updatePlayheadPosition();
+                this._syncVideoLayers(true);
                 this._updateInspectorValues();
                 this._requestRedraw();
             }
@@ -3205,97 +3204,137 @@
                 this._requestRedraw();
             }
 
+            _isVideoFile(file) {
+                if (!file) return false;
+                if ((file.type || '').toLowerCase().startsWith('video/')) return true;
+                return /\.(webm|mp4|m4v|mov|ogv|avi)$/i.test(file.name || '');
+            }
+
+            _isWebMFile(file) {
+                if (!file) return false;
+                return /webm/i.test(file.type || '') || /\.webm$/i.test(file.name || '');
+            }
+
+            _videoLoopTime(vid, t) {
+                const d = Number(vid && vid.duration);
+                if (!isFinite(d) || d <= 0) return Math.max(0, t);
+                return Math.max(0, t % d);
+            }
+
+            /** 让所有视频图层跟随合成时间轴；导出时逐帧精确 seek */
+            _syncVideoLayers(force) {
+                const t = this.comp.currentTime;
+                const exporting = !!this.exporting;
+                this.comp.layers.forEach(layer => {
+                    if (layer.type !== 'video' || !layer.videoElement) return;
+                    const vid = layer.videoElement;
+                    if (!vid || (vid.readyState < 1 && !force)) return;
+                    const target = this._videoLoopTime(vid, t);
+                    const drift = Math.abs((Number(vid.currentTime) || 0) - target);
+                    const needSeek = force || exporting || !this.comp.isPlaying
+                        ? drift > 0.03
+                        : drift > 0.18;
+                    if (needSeek) {
+                        try { vid.currentTime = target; } catch (err) { /* ignore */ }
+                    }
+                    if (!exporting) {
+                        if (this.comp.isPlaying && vid.paused) {
+                            const p = vid.play();
+                            if (p && typeof p.catch === 'function') p.catch(() => {});
+                        } else if (!this.comp.isPlaying && !vid.paused) {
+                            vid.pause();
+                        }
+                    }
+                });
+            }
+
             _onImportMedia(e) {
-                const files = Array.from(e.target.files);
+                const files = Array.from(e.target.files || []);
+                if (!files.length) return;
+
                 files.forEach(file => {
                     const url = URL.createObjectURL(file);
-                    if (file.type.startsWith('image/')) {
-                        const img = new Image();
-                        img.src = url;
-                        img.onload = () => {
-                            const layer = new Layer('image', file.name, {
-                                x: 100,
-                                y: 100,
-                                width: img.width,
-                                height: img.height,
-                                imageData: img,
-                                scaleX: Math.min(1, 300 / img.width),
-                                scaleY: Math.min(1, 200 / img.height),
-                            });
-                            this.comp.addLayer(layer);
-                            this._updateLayerStack();
-                            this._updateLayerProperties();
-                            this._requestRedraw();
-                        };
-                        img.onerror = () => {
-                            // 若图片加载失败，使用占位符
-                            const layer = new Layer('image', file.name, {
-                                x: 100,
-                                y: 100,
-                                width: 200,
-                                height: 150,
-                                imageData: null,
-                            });
-                            this.comp.addLayer(layer);
-                            this._updateLayerStack();
-                            this._updateLayerProperties();
-                            this._requestRedraw();
-                        };
-                    } else if (file.type.startsWith('video/')) {
-                        // 创建视频图层
+                    if (this._isVideoFile(file)) {
+                        // WebM / MP4 等视频统一走这里；type 为空时按扩展名兜底
                         const vid = document.createElement('video');
-                        vid.src = url;
+                        vid.preload = 'auto';
+                        vid.playsInline = true;
                         vid.loop = true;
-                        vid.load();
-                        vid.onloadeddata = () => {
-                            // 当视频准备好时
+                        let done = false;
+                        const addVideoLayer = videoEl => {
+                            if (done) return;
+                            done = true;
+                            const vw = videoEl ? (videoEl.videoWidth || 1280) : 1280;
+                            const vh = videoEl ? (videoEl.videoHeight || 720) : 720;
+                            const fit = Math.min(960 / vw, 540 / vh, 1);
+                            const w = Math.max(1, Math.round(vw * fit));
+                            const h = Math.max(1, Math.round(vh * fit));
                             const layer = new Layer('video', file.name, {
-                                x: 100,
-                                y: 100,
-                                width: 320,
-                                height: 240,
-                                videoElement: vid,
+                                x: (this.comp.width - w) / 2,
+                                y: (this.comp.height - h) / 2,
+                                width: w,
+                                height: h,
+                                videoElement: videoEl,
                                 scaleX: 1,
                                 scaleY: 1,
                             });
+                            if (videoEl && isFinite(videoEl.duration) && videoEl.duration > 0) {
+                                layer.outPoint = Math.min(videoEl.duration, 120);
+                                if (videoEl.duration > this.comp.duration && videoEl.duration <= 120) {
+                                    this.comp.duration = Math.ceil(videoEl.duration);
+                                }
+                            }
                             this.comp.addLayer(layer);
                             this._updateLayerStack();
                             this._updateLayerProperties();
+                            this._syncVideoLayers(true);
                             this._requestRedraw();
                         };
+                        vid.onloadeddata = () => addVideoLayer(vid);
                         vid.onerror = () => {
-                            // 若视频加载失败，使用占位符
-                            const layer = new Layer('video', file.name, {
+                            console.warn('视频加载失败，使用占位符:', file.name);
+                            addVideoLayer(null);
+                        };
+                        vid.src = url;
+                        vid.load();
+                    } else if ((file.type || '').toLowerCase().startsWith('image/')) {
+                        const img = new Image();
+                        const addImageLayer = imageEl => {
+                            const layer = new Layer('image', file.name, {
                                 x: 100,
                                 y: 100,
-                                width: 320,
-                                height: 240,
-                                videoElement: null,
+                                width: imageEl ? (imageEl.width || 200) : 200,
+                                height: imageEl ? (imageEl.height || 150) : 150,
+                                imageData: imageEl,
+                                scaleX: imageEl ? Math.min(1, 300 / (imageEl.width || 300)) : 1,
+                                scaleY: imageEl ? Math.min(1, 200 / (imageEl.height || 200)) : 1,
                             });
                             this.comp.addLayer(layer);
                             this._updateLayerStack();
                             this._updateLayerProperties();
                             this._requestRedraw();
                         };
-                        // 为了简化，我们直接假设加载成功
-                        // 注意：在实际中可能需要等待元数据
+                        img.onload = () => addImageLayer(img);
+                        img.onerror = () => addImageLayer(null);
+                        img.src = url;
                     } else {
-                        // 不支持的文件类型
-                        console.log('不支持的文件类型');
+                        console.warn('不支持的文件类型:', file.name, file.type);
                     }
                 });
-                // 更新项目面板
+
                 if (files.length) {
                     this.importedCount += files.length;
                     this.projectEmptyEl.classList.add('hidden');
-                    this.assetListEl.innerHTML = files.map(f =>
-                        '<div class="asset-item"><span class="icon">' +
-                        (f.type.startsWith('video/') ? '🎬' : '🖼️') + '</span>' +
-                        escapeHtml(f.name) + '</div>'
-                    ).join('');
+                    const rows = files.map(f => {
+                        const icon = this._isVideoFile(f)
+                            ? (this._isWebMFile(f) ? '🎞️' : '🎬')
+                            : '🖼️';
+                        return '<div class="asset-item"><span class="icon">' + icon + '</span>' +
+                            escapeHtml(f.name) + '</div>';
+                    }).join('');
+                    this.assetListEl.innerHTML = this.assetListEl.innerHTML + rows;
                 }
-                // 重置 input 以便重复导入
-                e.target.value = '';
+                this.importInput.value = '';
             }
 
             // ---- 导出 WebM ----
@@ -3339,10 +3378,37 @@
                         };
                         recorder.start();
 
+                        // 导出时暂停视频，逐帧精确 seek，保证 WebM 素材进入成片
+                        this.comp.layers.forEach(layer => {
+                            if (layer.type === 'video' && layer.videoElement) {
+                                try { layer.videoElement.pause(); } catch (err) { /* ignore */ }
+                            }
+                        });
                         // 渲染所有帧
                         for (let i = 0; i < totalFrames; i++) {
                             const time = i / fps;
                             this.comp.setTime(time);
+                            this._syncVideoLayers(true);
+                            // 等视频 seek 完成，最多等一帧时间
+                            await Promise.race([
+                                new Promise(resolve => {
+                                    const vids = this.comp.layers.filter(l =>
+                                        l.type === 'video' && l.videoElement && l.videoElement.readyState >= 1
+                                    );
+                                    if (!vids.length) { resolve(); return; }
+                                    let left = vids.length;
+                                    const done = () => { if (--left <= 0) resolve(); };
+                                    vids.forEach(l => {
+                                        const v = l.videoElement;
+                                        if (Math.abs(v.currentTime - this._videoLoopTime(v, time)) < 0.02) {
+                                            done();
+                                            return;
+                                        }
+                                        v.addEventListener('seeked', done, { once: true });
+                                    });
+                                }),
+                                new Promise(resolve => setTimeout(resolve, 1000 / fps)),
+                            ]);
                             this.renderer.needsRedraw = true;
                             this.renderer.draw(performance.now());
                             // 等待一帧的时间 (实际录制速率由 captureStream 控制)
@@ -3791,7 +3857,7 @@
             _showAbout() {
                 this._showModal('关于',
                     '<p><b>Sysbin 动画编辑器 V2</b></p>' +
-                    '<p>支持关键帧贝塞尔插值、效果系统、时间轴编辑与 WebM 导出。</p>' +
+                    '<p>支持关键帧贝塞尔插值、效果系统、时间轴编辑，以及 WebM 导入 / 导出。</p>' +
                     '<p>这是一个纯前端单文件应用，所有数据保存在浏览器内存中。</p>',
                     null, '关闭');
             }
