@@ -923,6 +923,67 @@
         }
         .asset-item .icon { color: var(--accent); font-size: 12px; }
 
+
+        /* ============================================================
+           V3 — 菜单 / 折叠 / 对齐 / 弹窗
+           ============================================================ */
+        #top-menu .menu-items .mi.open { background: #313244; color: var(--text-primary); }
+        .app-menu-drop {
+            position: fixed; z-index: 600; min-width: 190px; padding: 4px;
+            background: #1e1e2e; border: 1px solid var(--border-light);
+            border-radius: 5px; box-shadow: 0 8px 28px rgba(0,0,0,0.6); font-size: 11px;
+        }
+        .app-menu-drop .mi-item {
+            display: flex; align-items: center; gap: 8px; padding: 5px 9px;
+            color: var(--text-secondary); border-radius: 3px; cursor: pointer; white-space: nowrap;
+        }
+        .app-menu-drop .mi-item:hover { background: var(--accent); color: #11111b; }
+        .app-menu-drop .mi-item.disabled { opacity: 0.38; cursor: not-allowed; }
+        .app-menu-drop .mi-item.disabled:hover { background: transparent; color: var(--text-secondary); }
+        .app-menu-drop .mi-item .mi-key {
+            margin-left: auto; font-size: 9px; color: var(--text-dim); font-family: var(--font-mono);
+        }
+        .app-menu-drop .mi-item:hover .mi-key { color: #11111b; }
+        .app-menu-drop .mi-sep { height: 1px; background: var(--border); margin: 4px 2px; }
+        .panel-hidden { display: none !important; }
+        .section.folded > :not(.section-title) { display: none !important; }
+        .section.folded .arrow, #inspector.folded .arrow { display: inline-block; transform: rotate(-90deg); }
+        #align-section .align-buttons { display: flex; flex-wrap: wrap; gap: 3px; }
+        #align-section .align-buttons button {
+            flex: 0 0 calc(25% - 3px); background: #1e1e2e; border: 1px solid var(--border);
+            color: var(--text-secondary); padding: 4px 0; font-size: 11px; cursor: pointer;
+            border-radius: 3px; font-family: var(--font-ui);
+        }
+        #align-section .align-buttons button:hover { background: var(--accent); color: #11111b; border-color: var(--accent); }
+        .timeline-zoom [data-tzoom] { cursor: pointer; padding: 0 3px; color: var(--text-secondary); font-size: 12px; }
+        .timeline-zoom [data-tzoom]:hover { color: var(--accent); }
+        .app-modal-mask {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 700;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .app-modal {
+            background: #1e1e2e; border: 1px solid var(--border-light); border-radius: 7px;
+            min-width: 340px; max-width: 90vw; max-height: 86vh; overflow: auto; padding: 16px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.6); color: var(--text-primary); font-size: 12px;
+        }
+        .app-modal h3 { margin: 0 0 12px; font-size: 13px; color: var(--text-primary); }
+        .app-modal p { line-height: 1.7; color: var(--text-secondary); margin: 6px 0; }
+        .app-modal .modal-row { display: flex; align-items: center; gap: 8px; margin: 7px 0; }
+        .app-modal .modal-row label { width: 74px; color: var(--text-secondary); flex-shrink: 0; }
+        .app-modal .modal-row input, .app-modal .modal-row select {
+            flex: 1; background: #11111b; border: 1px solid var(--border); color: var(--text-primary);
+            border-radius: 3px; padding: 4px 6px; font-family: var(--font-mono); font-size: 11px;
+        }
+        .app-modal .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+        .app-modal .modal-actions button {
+            background: #313244; border: 1px solid var(--border-light); color: var(--text-primary);
+            padding: 5px 14px; border-radius: 3px; cursor: pointer; font-size: 11px;
+        }
+        .app-modal .modal-actions button:hover { border-color: var(--accent); }
+        .app-modal .modal-actions button.primary { background: var(--accent); color: #11111b; border-color: var(--accent); }
+        .app-modal .shortcut-grid { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; font-size: 11px; }
+        .app-modal .shortcut-grid b { color: var(--accent); font-family: var(--font-mono); font-weight: 500; }
+
     </style>
 </head>
 <body>
@@ -931,9 +992,9 @@
         <header id="top-menu">
             <div class="logo">Sysbin <span>动画编辑器</span></div>
             <nav class="menu-items">
-                <span class="mi">文件</span><span class="mi">编辑</span><span class="mi">合成</span>
-                <span class="mi">图层</span><span class="mi">效果</span><span class="mi">动画</span>
-                <span class="mi">视图</span><span class="mi">窗口</span><span class="mi">帮助</span>
+                <span class="mi" data-menu="file">文件</span><span class="mi" data-menu="edit">编辑</span><span class="mi" data-menu="comp">合成</span>
+                <span class="mi" data-menu="layer">图层</span><span class="mi" data-menu="effect">效果</span><span class="mi" data-menu="anim">动画</span>
+                <span class="mi" data-menu="view">视图</span><span class="mi" data-menu="window">窗口</span><span class="mi" data-menu="help">帮助</span>
             </nav>
             <div class="workspace-info">未命名合成 • 1920×1080 • 30fps</div>
             <div id="workspace-collapse" title="折叠面板">
@@ -945,14 +1006,14 @@
         <!-- ===== LEFT PANEL ===== -->
         <aside id="left-panel">
             <div class="panel-tabs">
-                <span class="tab active">项目</span>
-                <span class="tab">信息</span>
+                <span class="tab active" data-tab="project">项目</span>
+                <span class="tab" data-tab="info">信息</span>
             </div>
             <div id="project-panel">
                 <button class="import-btn" id="import-btn">📥 导入媒体</button>
                 <div class="project-tree">
-                    <div class="folder"><span class="icon">📁</span> 合成</div>
-                    <div class="file"><span class="icon">🎬</span> 合成 1</div>
+                    <div class="folder" data-folder="comp"><span class="icon">📁</span> 合成</div>
+                    <div class="file" data-comp="1"><span class="icon">🎬</span> 合成 1</div>
                 </div>
                 <div id="project-empty" class="empty-state compact">
                     <div class="empty-icon">📁</div>
@@ -972,11 +1033,11 @@
         <!-- ===== CENTER VIEWPORT ===== -->
         <main id="center-viewport">
             <div id="viewport-toolbar">
-                <span class="tool active">◀</span><span class="tool">▶</span>
+                <span class="tool active" data-tool="select" title="选择工具 (V)">⬚</span><span class="tool" data-tool="pan" title="平移工具 (H / 空格)">✥</span>
                 <span class="sep"></span>
-                <span class="tool">⛶</span><span class="tool">⊞</span><span class="tool">⤡</span>
+                <span class="tool" data-tool="fit" title="适应窗口">⛶</span><span class="tool" data-tool="grid" title="显示网格">⊞</span><span class="tool" data-tool="fullscreen" title="全屏预览">⤢</span>
                 <span class="sep"></span>
-                <span class="tool">🔍</span>
+                <span class="tool" data-tool="zoomin" title="放大 (Ctrl + 滚轮)">🔍</span>
                 <select id="canvas-zoom" class="zoom-select" title="画布缩放">
                     <option value="fit">适应窗口</option>
                     <option value="2">200%</option>
@@ -999,7 +1060,7 @@
         <!-- ===== RIGHT PANEL ===== -->
         <aside id="right-panel">
             <div class="section" id="effects-library">
-                <div class="section-title"><span class="arrow">▼</span> 效果与预设</div>
+                <div class="section-title" data-fold="effects-library"><span class="arrow">▼</span> 效果与预设</div>
                 <div class="effect-library-list">
                     <div class="effect-item" data-effect="blur"><span class="icon">▣</span> 模糊</div>
                     <div class="effect-item" data-effect="dropShadow"><span class="icon">◑</span> 投影</div>
@@ -1008,15 +1069,15 @@
                 <div class="library-hint">点击添加到选中图层</div>
             </div>
             <div class="section" id="align-section">
-                <div class="section-title"><span class="arrow">▼</span> 对齐</div>
+                <div class="section-title" data-fold="align-section"><span class="arrow">▼</span> 对齐</div>
                 <div class="align-buttons">
-                    <button title="左对齐">⊣</button><button title="水平居中">⟂</button><button title="右对齐">⊢</button>
-                    <button title="顶对齐">⊤</button><button title="垂直居中">⟇</button><button title="底对齐">⊥</button>
-                    <button title="水平分布">⇔</button><button title="垂直分布">⇅</button>
+                    <button data-align="left" title="左对齐">⊣</button><button data-align="hcenter" title="水平居中">⟂</button><button data-align="right" title="右对齐">⊢</button>
+                    <button data-align="top" title="顶对齐">⊤</button><button data-align="vcenter" title="垂直居中">⟇</button><button data-align="bottom" title="底对齐">⊥</button>
+                    <button data-align="hdist" title="水平分布">⇔</button><button data-align="vdist" title="垂直分布">⇅</button>
                 </div>
             </div>
-            <div id="inspector">
-                <div class="section-title inspector-title"><span class="arrow">▼</span> 属性</div>
+            <div id="inspector" class="inspector">
+                <div class="section-title inspector-title" data-fold="inspector"><span class="arrow">▼</span> 属性</div>
                 <div id="inspector-empty" class="empty-state compact">
                     <div class="empty-icon">👆</div>
                     <div class="empty-title">选择图层</div>
@@ -1038,9 +1099,9 @@
                 <span class="loop-toggle" id="loop-toggle" title="循环播放">⟳</span>
                 <button class="export-btn" id="export-btn">📤 导出 WebM</button>
                 <div class="timeline-zoom">
-                    <span>−</span>
+                    <span data-tzoom="out" title="缩小时间轴">−</span>
                     <input type="range" id="timeline-zoom-slider" min="20" max="200" value="100" />
-                    <span>+</span>
+                    <span data-tzoom="in" title="放大时间轴">+</span>
                 </div>
             </div>
             <div id="layer-stack">
@@ -1761,6 +1822,7 @@
                 this.viewportH = 0;
                 this.needsRedraw = true;
                 this.showSafeMargins = true;
+                this.showGrid = false;
             }
 
             resize(w, h) {
@@ -1805,6 +1867,7 @@
                 ctx.fillStyle = '#1a1a2e';
                 ctx.fillRect(0, 0, this.comp.width, this.comp.height);
 
+                if (this.showGrid) this._drawGrid(ctx);
                 if (this.showSafeMargins) this._drawSafeMargins(ctx);
 
                 const layers = this.comp.getRenderOrder();
@@ -1816,6 +1879,22 @@
 
                 ctx.restore();
                 this.needsRedraw = false;
+            }
+
+            _drawGrid(ctx) {
+                const step = 100;
+                ctx.save();
+                ctx.strokeStyle = 'rgba(205,214,244,0.09)';
+                ctx.lineWidth = 1 / this.zoom;
+                ctx.beginPath();
+                for (let x = 0; x <= this.comp.width; x += step) {
+                    ctx.moveTo(x, 0); ctx.lineTo(x, this.comp.height);
+                }
+                for (let y = 0; y <= this.comp.height; y += step) {
+                    ctx.moveTo(0, y); ctx.lineTo(this.comp.width, y);
+                }
+                ctx.stroke();
+                ctx.restore();
             }
 
             _drawCheckerboard(ctx, w, h) {
@@ -2195,6 +2274,69 @@
         // ===========================================================
         // 主应用类 (V2)
         // ===========================================================
+        const APP_MENUS = {
+            file: [
+                { label: '新建项目', key: 'Ctrl+N', cmd: 'new' },
+                { label: '导入媒体…', key: 'Ctrl+I', cmd: 'import' },
+                { sep: true },
+                { label: '导出 WebM…', key: 'Ctrl+E', cmd: 'export' },
+            ],
+            edit: [
+                { label: '撤销', key: 'Ctrl+Z', cmd: 'undo' },
+                { label: '重做', key: 'Ctrl+Y', cmd: 'redo' },
+                { sep: true },
+                { label: '复制图层', key: 'Ctrl+D', cmd: 'duplicate' },
+                { label: '删除图层', key: 'Del', cmd: 'delete' },
+            ],
+            comp: [
+                { label: '合成设置…', cmd: 'compSettings' },
+                { sep: true },
+                { label: '跳转到开始', key: 'Home', cmd: 'home' },
+                { label: '跳转到结束', key: 'End', cmd: 'end' },
+            ],
+            layer: [
+                { label: '新建形状图层', cmd: 'newShape' },
+                { label: '新建文字图层', cmd: 'newText' },
+                { sep: true },
+                { label: '复制图层', key: 'Ctrl+D', cmd: 'duplicate' },
+                { label: '上移一层', key: '↑', cmd: 'layerUp' },
+                { label: '下移一层', key: '↓', cmd: 'layerDown' },
+                { label: '删除图层', key: 'Del', cmd: 'delete' },
+            ],
+            effect: [
+                { label: '添加 模糊', cmd: 'fx:blur' },
+                { label: '添加 投影', cmd: 'fx:dropShadow' },
+                { label: '添加 发光', cmd: 'fx:glow' },
+            ],
+            anim: [
+                { label: '播放 / 暂停', key: 'Space', cmd: 'play' },
+                { label: '停止', cmd: 'stop' },
+                { label: '循环播放', cmd: 'loop' },
+                { sep: true },
+                { label: '上一帧', key: '←', cmd: 'prevFrame' },
+                { label: '下一帧', key: '→', cmd: 'nextFrame' },
+            ],
+            view: [
+                { label: '适应窗口', cmd: 'fit' },
+                { label: '实际大小 100%', cmd: 'zoom:1' },
+                { label: '50%', cmd: 'zoom:0.5' },
+                { sep: true },
+                { label: '显示 / 隐藏网格', cmd: 'grid' },
+                { label: '全屏预览', cmd: 'fullscreen' },
+            ],
+            window: [
+                { label: '折叠 / 展开 项目面板', cmd: 'toggleLeft' },
+                { label: '折叠 / 展开 属性面板', cmd: 'toggleRight' },
+                { sep: true },
+                { label: '时间轴加高', cmd: 'tlPlus' },
+                { label: '时间轴降低', cmd: 'tlMinus' },
+            ],
+            help: [
+                { label: '快捷键说明', cmd: 'shortcuts' },
+                { label: '关于 Sysbin 动画编辑器', cmd: 'about' },
+            ],
+        };
+
         class App {
             constructor() {
                 this.comp = new Composition();
@@ -2242,6 +2384,12 @@
                 this.exporting = false;
                 this.fxClipboard = null;
                 this.activeFxMenu = null;
+                this.activeMenu = null;
+                this.activeModal = null;
+                this.toolMode = 'select';
+                this.showGrid = false;
+                this.history = [];
+                this.future = [];
 
                 this._initUI();
                 this._initEvents();
@@ -2338,6 +2486,7 @@
 
                 this.layerStackEl.addEventListener('click', e => this._onLayerStackClick(e));
                 this.inspectorContentEl.addEventListener('click', e => this._onInspectorClick(e));
+                this.inspectorContentEl.addEventListener('focusin', () => { this._propEditPushed = false; });
                 this.inspectorContentEl.addEventListener('input', e => this._onInspectorInput(e));
                 this.inspectorContentEl.addEventListener('change', e => this._onInspectorInput(e));
                 this.inspectorContentEl.addEventListener('dragstart', e => this._onFxDragStart(e));
@@ -2357,6 +2506,7 @@
                     item.addEventListener('click', () => {
                         const layer = this.comp.getSelectedLayer();
                         if (!layer) { alert('请先选择一个图层'); return; }
+                        this._pushHistory();
                         layer.effects.push(createEffect(item.dataset.effect));
                         layer.expanded = true;
                         layer.showEffects = true;
@@ -2412,6 +2562,12 @@
                     this._resizeAll();
                 });
                 document.addEventListener('mouseup', () => { resizing = false; });
+
+                this._initMenuEvents();
+                this._initPanelEvents();
+                this._initToolbarEvents();
+                this._initAlignEvents();
+                this._updateWorkspaceInfo();
             }
 
             _resizeAll() {
@@ -2567,6 +2723,7 @@
                     return;
                 }
                 if (toggle) {
+                    this._pushHistory();
                     if (toggle === 'vis') layer.visible = !layer.visible;
                     if (toggle === 'audio') layer.audioOn = !layer.audioOn;
                     if (toggle === 'solo') layer.solo = !layer.solo;
@@ -2694,6 +2851,7 @@
             }
 
             _togglePropWatch(layer, prop) {
+                this._pushHistory();
                 const wasOn = layer.isAnimated(prop);
                 const on = layer.toggleStopwatch(prop, this.comp.currentTime);
                 if (on && !wasOn) layer.setKeyframe(prop, this.comp.currentTime, layer.getValue(prop, this.comp.currentTime));
@@ -2703,6 +2861,7 @@
             }
 
             _toggleFxWatch(fx, key) {
+                this._pushHistory();
                 const ap = fx.keyframes[key];
                 if (!ap) return;
                 ap.animated = !ap.animated;
@@ -2795,6 +2954,7 @@
             _onInspectorInput(e) {
                 const layer = this.comp.getSelectedLayer();
                 if (!layer) return;
+                if (!this._propEditPushed) { this._pushHistory(); this._propEditPushed = true; }
                 const time = this.comp.currentTime;
                 const prop = e.target.dataset.prop;
                 if (prop) {
@@ -2867,6 +3027,7 @@
             _executeFxMenu(cmd, index) {
                 const layer = this.comp.getSelectedLayer();
                 if (!layer || !layer.effects[index]) return;
+                if (cmd !== 'copy') this._pushHistory();
                 if (cmd === 'copy') {
                     this.fxClipboard = cloneEffect(layer.effects[index]);
                 } else if (cmd === 'paste') {
@@ -2915,6 +3076,7 @@
                 const to = parseInt(target.dataset.fx);
                 target.classList.remove('drag-over');
                 if (from !== to && layer.effects[from] && layer.effects[to]) {
+                    this._pushHistory();
                     const moved = layer.effects.splice(from, 1)[0];
                     layer.effects.splice(to, 0, moved);
                 }
@@ -3111,6 +3273,7 @@
                     this._updateLayerProperties();
                     this._requestRedraw();
                     if (!layer.locked) {
+                        this._pushHistory();
                         this.isDraggingLayer = true;
                         this.dragStartX = mx; this.dragStartY = my;
                         this.dragLayerOrigX = layer.x; this.dragLayerOrigY = layer.y;
@@ -3197,6 +3360,7 @@
 
                 const hit = this._hitKeyframe(row, mx);
                 if (hit) {
+                    this._pushHistory();
                     this._rowAnimatedProps(row).forEach(ap => ap.keyframes.forEach(k => { k.selected = false; }));
                     hit.kf.selected = true;
                     this.isDraggingKeyframe = true;
@@ -3256,40 +3420,525 @@
             _onKeyDown(e) {
                 const tag = (e.target.tagName || '').toLowerCase();
                 const typing = tag === 'input' || tag === 'select' || tag === 'textarea';
+                const mod = e.ctrlKey || e.metaKey;
+                const k = (e.key || '').toLowerCase();
+
+                if (mod && k === 'i') { e.preventDefault(); this._runCommand('import'); return; }
+                if (mod && k === 'e') { e.preventDefault(); this._runCommand('export'); return; }
+                if (mod && k === 'n') { e.preventDefault(); this._runCommand('new'); return; }
+                if (mod && k === 'z') {
+                    if (typing) return;
+                    e.preventDefault(); e.shiftKey ? this._redo() : this._undo(); return;
+                }
+                if (mod && k === 'y') {
+                    if (typing) return;
+                    e.preventDefault(); this._redo(); return;
+                }
                 if (e.key === ' ') {
                     this.spaceDown = true;
                     if (typing) return;
-                    e.preventDefault();
-                    this.playBtnEl.click();
+                    e.preventDefault(); this.playBtnEl.click(); return;
                 }
                 if (typing) return;
-                if ((e.ctrlKey || e.metaKey) && (e.key === 'd' || e.key === 'D')) {
-                    e.preventDefault();
-                    const layer = this.comp.getSelectedLayer();
-                    if (layer) {
-                        this.comp.addLayer(layer.clone());
-                        this._updateLayerStack(); this._updateLayerProperties(); this._requestRedraw();
+                if (mod && k === 'd') { e.preventDefault(); this._runCommand('duplicate'); return; }
+                if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); this._runCommand('delete'); return; }
+                if (e.key === 'ArrowUp') { e.preventDefault(); this._runCommand('layerUp'); return; }
+                if (e.key === 'ArrowDown') { e.preventDefault(); this._runCommand('layerDown'); return; }
+                if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('prev-frame-btn').click(); return; }
+                if (e.key === 'ArrowRight') { e.preventDefault(); document.getElementById('next-frame-btn').click(); return; }
+                if (e.key === 'Home') { e.preventDefault(); this._runCommand('home'); return; }
+                if (e.key === 'End') { e.preventDefault(); this._runCommand('end'); return; }
+                if (k === 'v') { this._setTool('select'); return; }
+                if (k === 'h') { this._setTool('pan'); return; }
+            }
+
+
+            // ---------- 顶部菜单 ----------
+            _initMenuEvents() {
+                document.querySelectorAll('#top-menu .menu-items .mi[data-menu]').forEach(el => {
+                    el.addEventListener('click', e => {
+                        e.stopPropagation();
+                        if (this.activeMenu && this.activeMenu.name === el.dataset.menu) { this._closeMenu(); return; }
+                        this._closeMenu();
+                        this._openMenu(el.dataset.menu, el);
+                    });
+                    el.addEventListener('mouseenter', () => {
+                        if (this.activeMenu && this.activeMenu.name !== el.dataset.menu) {
+                            this._closeMenu();
+                            this._openMenu(el.dataset.menu, el);
+                        }
+                    });
+                });
+                document.addEventListener('click', () => this._closeMenu());
+                document.addEventListener('keydown', e => {
+                    if (e.key === 'Escape') { this._closeMenu(); this._closeModal(); }
+                });
+            }
+
+            _openMenu(name, el) {
+                const defs = APP_MENUS[name];
+                if (!defs) return;
+                const drop = document.createElement('div');
+                drop.className = 'app-menu-drop';
+                drop.innerHTML = defs.map(item => {
+                    if (item.sep) return '<div class="mi-sep"></div>';
+                    let dis = item.disabled ? ' disabled' : '';
+                    if (item.cmd === 'undo' && !this.history.length) dis = ' disabled';
+                    if (item.cmd === 'redo' && !this.future.length) dis = ' disabled';
+                    const key = item.key ? '<span class="mi-key">' + item.key + '</span>' : '';
+                    return '<div class="mi-item' + dis + '" data-cmd="' + item.cmd + '">' + item.label + key + '</div>';
+                }).join('');
+                document.body.appendChild(drop);
+                const r = el.getBoundingClientRect();
+                drop.style.left = Math.min(r.left, window.innerWidth - 210) + 'px';
+                drop.style.top = (r.bottom + 4) + 'px';
+                drop.addEventListener('click', ev => {
+                    const it = ev.target.closest('.mi-item');
+                    if (!it || it.classList.contains('disabled')) return;
+                    const cmd = it.dataset.cmd;
+                    this._closeMenu();
+                    this._runCommand(cmd);
+                });
+                el.classList.add('open');
+                this.activeMenu = { name: name, el: el, drop: drop };
+            }
+
+            _closeMenu() {
+                if (!this.activeMenu) return;
+                this.activeMenu.drop.remove();
+                this.activeMenu.el.classList.remove('open');
+                this.activeMenu = null;
+            }
+
+            _runCommand(cmd) {
+                const c = this.comp;
+                const layer = c.getSelectedLayer();
+                if (cmd === 'new') {
+                    this._pushHistory();
+                    c.layers.length = 0;
+                    c.selectedLayerId = null;
+                    c.currentTime = 0;
+                    c.pause();
+                    this.importedCount = 0;
+                    this.assetListEl.innerHTML = '';
+                    this.projectEmptyEl.classList.remove('hidden');
+                    this.playBtnEl.textContent = '▶';
+                    this.playBtnEl.classList.remove('active');
+                    this._afterHistory();
+                } else if (cmd === 'import') {
+                    this.importInput.click();
+                } else if (cmd === 'export') {
+                    this._exportWebM();
+                } else if (cmd === 'undo') {
+                    this._undo();
+                } else if (cmd === 'redo') {
+                    this._redo();
+                } else if (cmd === 'duplicate' && layer) {
+                    this._pushHistory();
+                    c.addLayer(layer.clone());
+                    this._afterHistory();
+                } else if (cmd === 'delete' && layer) {
+                    if (layer.id === c.layers[0].id) { alert('背景图层不能删除'); return; }
+                    this._pushHistory();
+                    c.removeLayer(layer.id);
+                    this._afterHistory();
+                } else if (cmd === 'compSettings') {
+                    this._showCompSettings();
+                } else if (cmd === 'home') {
+                    c.setTime(0); this._seekRefresh();
+                } else if (cmd === 'end') {
+                    c.setTime(c.duration); this._seekRefresh();
+                } else if (cmd === 'newShape' || cmd === 'newText') {
+                    this._pushHistory();
+                    const isText = cmd === 'newText';
+                    const nl = new Layer(isText ? 'text' : 'solid',
+                        isText ? '文字 ' + (this.importedCount + 1) : '形状 ' + (this.importedCount + 1), {
+                        x: c.width / 2, y: c.height / 2,
+                        width: isText ? 400 : 200, height: isText ? 80 : 150,
+                        color: isText ? '#ffffff' : '#89b4fa',
+                        text: '新文字', fontSize: 64,
+                    });
+                    c.addLayer(nl);
+                    this._afterHistory();
+                } else if (cmd === 'layerUp' && layer) {
+                    this._pushHistory(); c.moveLayerUp(layer.id); this._afterHistory();
+                } else if (cmd === 'layerDown' && layer) {
+                    this._pushHistory(); c.moveLayerDown(layer.id); this._afterHistory();
+                } else if (cmd.indexOf('fx:') === 0) {
+                    if (!layer) { alert('请先选择一个图层'); return; }
+                    this._pushHistory();
+                    layer.effects.push(createEffect(cmd.slice(3)));
+                    layer.expanded = true; layer.showEffects = true;
+                    this._afterHistory();
+                } else if (cmd === 'play') {
+                    this.playBtnEl.click();
+                } else if (cmd === 'stop') {
+                    this.stopBtnEl.click();
+                } else if (cmd === 'loop') {
+                    this.loopToggleEl.click();
+                } else if (cmd === 'prevFrame') {
+                    document.getElementById('prev-frame-btn').click();
+                } else if (cmd === 'nextFrame') {
+                    document.getElementById('next-frame-btn').click();
+                } else if (cmd === 'fit') {
+                    this._setZoom('fit');
+                } else if (cmd.indexOf('zoom:') === 0) {
+                    this._setZoom(cmd.slice(5));
+                } else if (cmd === 'grid') {
+                    this._toggleGrid();
+                } else if (cmd === 'fullscreen') {
+                    this._toggleFullscreen();
+                } else if (cmd === 'toggleLeft') {
+                    document.querySelector('[data-collapse="left"]').click();
+                } else if (cmd === 'toggleRight') {
+                    document.querySelector('[data-collapse="right"]').click();
+                } else if (cmd === 'tlPlus' || cmd === 'tlMinus') {
+                    const panel = document.getElementById('timeline-panel');
+                    const h = clamp((parseFloat(panel.style.height) || 280) + (cmd === 'tlPlus' ? 50 : -50), 200, 500);
+                    panel.style.height = h + 'px'; this._resizeAll();
+                } else if (cmd === 'shortcuts') {
+                    this._showShortcuts();
+                } else if (cmd === 'about') {
+                    this._showAbout();
+                }
+            }
+
+            // ---------- 弹窗 ----------
+            _showModal(title, bodyHtml, onOk, okLabel) {
+                this._closeModal();
+                const mask = document.createElement('div');
+                mask.className = 'app-modal-mask';
+                mask.innerHTML = '<div class="app-modal"><h3>' + title + '</h3>' + bodyHtml +
+                    '<div class="modal-actions"><button data-modal="cancel">取消</button>' +
+                    '<button class="primary" data-modal="ok">' + (okLabel || '确定') + '</button></div></div>';
+                document.body.appendChild(mask);
+                mask.addEventListener('click', ev => {
+                    const act = ev.target.dataset.modal;
+                    if (act === 'cancel' || ev.target === mask) { this._closeModal(); return; }
+                    if (act === 'ok') {
+                        const keep = onOk ? onOk(mask) : false;
+                        if (keep !== true) this._closeModal();
                     }
+                });
+                this.activeModal = mask;
+                const first = mask.querySelector('input, select, button');
+                if (first) first.focus();
+            }
+
+            _closeModal() {
+                if (this.activeModal) { this.activeModal.remove(); this.activeModal = null; }
+            }
+
+            _showCompSettings() {
+                const c = this.comp;
+                this._showModal('合成设置',
+                    '<div class="modal-row"><label>宽度</label><input id="cfg-w" type="number" min="64" max="8192" value="' + c.width + '"></div>' +
+                    '<div class="modal-row"><label>高度</label><input id="cfg-h" type="number" min="64" max="8192" value="' + c.height + '"></div>' +
+                    '<div class="modal-row"><label>帧率</label><input id="cfg-fps" type="number" min="1" max="120" value="' + c.fps + '"></div>' +
+                    '<div class="modal-row"><label>时长(秒)</label><input id="cfg-dur" type="number" min="1" max="600" step="0.5" value="' + c.duration + '"></div>',
+                    mask => {
+                        const w = parseInt(mask.querySelector('#cfg-w').value, 10);
+                        const h = parseInt(mask.querySelector('#cfg-h').value, 10);
+                        const fps = parseInt(mask.querySelector('#cfg-fps').value, 10);
+                        const dur = parseFloat(mask.querySelector('#cfg-dur').value);
+                        if (!w || !h || !fps || !dur || w < 64 || h < 64 || fps < 1 || dur < 1) {
+                            alert('请输入有效的宽高、帧率和时长'); return true;
+                        }
+                        this._pushHistory();
+                        c.width = w; c.height = h; c.fps = fps; c.duration = dur;
+                        c.setTime(Math.min(c.currentTime, dur));
+                        this._afterHistory();
+                        this._resizeAll();
+                    });
+            }
+
+            _showShortcuts() {
+                const rows = [
+                    ['Space', '播放 / 暂停'], ['Ctrl + Z', '撤销'], ['Ctrl + Y', '重做'],
+                    ['Ctrl + D', '复制图层'], ['Delete', '删除图层'], ['↑ / ↓', '上移 / 下移图层'],
+                    ['← / →', '上一帧 / 下一帧'], ['Home / End', '跳到开头 / 结尾'],
+                    ['V / H', '选择工具 / 平移工具'], ['空格 + 拖拽', '平移画布'],
+                    ['Ctrl + 滚轮', '缩放画布 / 时间轴'], ['Alt + 点击参数名', '重置效果参数'],
+                    ['Esc', '关闭菜单 / 弹窗'],
+                ];
+                this._showModal('快捷键',
+                    '<p>常用操作：</p><div class="shortcut-grid">' +
+                    rows.map(r => '<b>' + r[0] + '</b><span>' + r[1] + '</span>').join('') + '</div>',
+                    null, '关闭');
+            }
+
+            _showAbout() {
+                this._showModal('关于',
+                    '<p><b>Sysbin 动画编辑器 V2</b></p>' +
+                    '<p>支持关键帧贝塞尔插值、效果系统、时间轴编辑与 WebM 导出。</p>' +
+                    '<p>这是一个纯前端单文件应用，所有数据保存在浏览器内存中。</p>',
+                    null, '关闭');
+            }
+
+
+            // ---------- 撤销 / 重做 ----------
+            _apSnapshot(ap) {
+                return {
+                    animated: ap.animated, value: cloneValue(ap.value), interpolation: ap.interpolation,
+                    keyframes: ap.keyframes.map(k => ({
+                        time: k.time, value: cloneValue(k.value), selected: !!k.selected,
+                        easing: {
+                            in: { x1: k.easing.in.x1, y1: k.easing.in.y1 },
+                            out: { x1: k.easing.out.x1, y1: k.easing.out.y1 },
+                        },
+                    })),
+                };
+            }
+
+            _apRestore(ap, snap) {
+                ap.animated = snap.animated;
+                ap.value = cloneValue(snap.value);
+                ap.interpolation = snap.interpolation;
+                ap.keyframes = snap.keyframes.map(k => ({
+                    time: k.time, value: cloneValue(k.value), selected: !!k.selected,
+                    easing: {
+                        in: { x1: k.easing.in.x1, y1: k.easing.in.y1 },
+                        out: { x1: k.easing.out.x1, y1: k.easing.out.y1 },
+                    },
+                }));
+            }
+
+            _snapshot() {
+                const c = this.comp;
+                const apsOf = obj => Object.keys(obj).reduce((o, k) => { o[k] = this._apSnapshot(obj[k]); return o; }, {});
+                return {
+                    duration: c.duration, fps: c.fps, width: c.width, height: c.height,
+                    currentTime: c.currentTime, selectedLayerId: c.selectedLayerId,
+                    layers: c.layers.map(l => ({
+                        id: l.id, type: l.type, name: l.name,
+                        visible: l.visible, locked: l.locked, muted: l.muted, solo: l.solo, audioOn: l.audioOn,
+                        parent: l.parent, inPoint: l.inPoint, outPoint: l.outPoint,
+                        color: l.color, text: l.text, fontSize: l.fontSize, width: l.width, height: l.height,
+                        imageData: l.imageData, videoElement: l.videoElement,
+                        expanded: l.expanded, selected: l.selected,
+                        showTransform: l.showTransform, showEffects: l.showEffects,
+                        properties: apsOf(l.properties),
+                        effects: l.effects.map(e => ({
+                            id: e.id, enabled: e.enabled, expanded: e.expanded,
+                            anims: apsOf(e.keyframes),
+                        })),
+                    })),
+                };
+            }
+
+            _restore(snap) {
+                const c = this.comp;
+                c.duration = snap.duration; c.fps = snap.fps;
+                c.width = snap.width; c.height = snap.height;
+                c.selectedLayerId = snap.selectedLayerId;
+                c.layers = snap.layers.map(ls => {
+                    const l = new Layer(ls.type, ls.name, {});
+                    Object.keys(ls).forEach(k => {
+                        if (k === 'properties' || k === 'effects') return;
+                        l[k] = ls[k];
+                    });
+                    Object.keys(ls.properties).forEach(k => this._apRestore(l.properties[k], ls.properties[k]));
+                    l.effects = ls.effects.map(es => {
+                        const e = createEffect(es.id);
+                        if (!e) return null;
+                        e.enabled = es.enabled; e.expanded = es.expanded;
+                        Object.keys(es.anims).forEach(k => {
+                            if (e.keyframes[k]) this._apRestore(e.keyframes[k], es.anims[k]);
+                        });
+                        return e;
+                    }).filter(Boolean);
+                    return l;
+                });
+                c.setTime(Math.min(snap.currentTime, c.duration));
+            }
+
+            _pushHistory() {
+                this.history.push(this._snapshot());
+                if (this.history.length > 40) this.history.shift();
+                this.future.length = 0;
+            }
+
+            _undo() {
+                if (!this.history.length) return;
+                this.future.push(this._snapshot());
+                this._restore(this.history.pop());
+                this._afterHistory();
+                this._resizeAll();
+            }
+
+            _redo() {
+                if (!this.future.length) return;
+                this.history.push(this._snapshot());
+                this._restore(this.future.pop());
+                this._afterHistory();
+                this._resizeAll();
+            }
+
+            _afterHistory() {
+                this._updateLayerStack();
+                this._updateLayerProperties();
+                this._updateTimeDisplay();
+                this._updatePlayheadPosition();
+                this._updateWorkspaceInfo();
+                this._requestRedraw();
+            }
+
+            _updateWorkspaceInfo() {
+                const c = this.comp;
+                const info = document.querySelector('#top-menu .workspace-info');
+                if (info) info.textContent = '未命名合成 • ' + c.width + '×' + c.height + ' • ' + c.fps + 'fps';
+                const fps = document.getElementById('fps-label');
+                if (fps) fps.textContent = c.fps + ' fps';
+                const vals = document.querySelectorAll('#info-panel .value');
+                if (vals[0]) vals[0].textContent = c.width + ' × ' + c.height;
+                if (vals[1]) vals[1].textContent = c.fps + ' fps';
+                if (vals[2]) vals[2].textContent = formatClock(c.duration);
+            }
+
+            // ---------- 左侧面板 / 折叠 ----------
+            _initPanelEvents() {
+                document.getElementById('info-panel').classList.add('panel-hidden');
+                document.querySelectorAll('.panel-tabs .tab[data-tab]').forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        document.querySelectorAll('.panel-tabs .tab').forEach(t => t.classList.remove('active'));
+                        tab.classList.add('active');
+                        const info = tab.dataset.tab === 'info';
+                        document.getElementById('project-panel').classList.toggle('panel-hidden', info);
+                        document.getElementById('info-panel').classList.toggle('panel-hidden', !info);
+                    });
+                });
+                document.querySelectorAll('[data-fold]').forEach(title => {
+                    title.addEventListener('click', () => this._toggleFold(title.dataset.fold));
+                });
+                document.querySelectorAll('#project-panel .folder[data-folder]').forEach(f => {
+                    f.addEventListener('click', () => {
+                        const collapsed = f.classList.toggle('collapsed');
+                        let n = f.nextElementSibling;
+                        while (n && n.classList.contains('file')) {
+                            n.classList.toggle('panel-hidden', collapsed);
+                            n = n.nextElementSibling;
+                        }
+                        const icon = f.querySelector('.icon');
+                        if (icon) icon.textContent = collapsed ? '📂' : '📁';
+                    });
+                });
+                document.querySelectorAll('#project-panel .file[data-comp]').forEach(f => {
+                    f.addEventListener('click', () => { this._seekRefresh(); });
+                });
+            }
+
+            _toggleFold(id) {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.classList.toggle('folded');
+                if (id === 'inspector') {
+                    const cont = document.getElementById('inspector-content');
+                    const empty = document.getElementById('inspector-empty');
+                    if (cont) cont.classList.toggle('panel-hidden', el.classList.contains('folded'));
+                    if (empty) empty.classList.toggle('panel-hidden', el.classList.contains('folded'));
                 }
-                if (e.key === 'Delete' || e.key === 'Backspace') {
-                    const layer = this.comp.getSelectedLayer();
-                    if (layer && layer.id !== this.comp.layers[0].id) {
-                        this.comp.removeLayer(layer.id);
-                        this._updateLayerStack(); this._updateLayerProperties(); this._requestRedraw();
-                    }
+                setTimeout(() => this._resizeAll(), 20);
+            }
+
+            // ---------- 视口工具栏 ----------
+            _initToolbarEvents() {
+                document.querySelectorAll('#viewport-toolbar .tool[data-tool]').forEach(el => {
+                    el.addEventListener('click', () => {
+                        const t = el.dataset.tool;
+                        if (t === 'select' || t === 'pan') this._setTool(t);
+                        else if (t === 'fit') this._setZoom('fit');
+                        else if (t === 'grid') this._toggleGrid();
+                        else if (t === 'fullscreen') this._toggleFullscreen();
+                        else if (t === 'zoomin') this._setZoom(String(this.renderer.zoom * 1.25));
+                    });
+                });
+            }
+
+            _setTool(mode) {
+                this.toolMode = mode;
+                document.querySelectorAll('#viewport-toolbar .tool[data-tool="select"], #viewport-toolbar .tool[data-tool="pan"]')
+                    .forEach(el => el.classList.toggle('active', el.dataset.tool === mode));
+                this.viewportContainer.style.cursor = mode === 'pan' ? 'grab' : 'default';
+            }
+
+            _toggleGrid() {
+                this.showGrid = !this.showGrid;
+                this.renderer.showGrid = this.showGrid;
+                const btn = document.querySelector('[data-tool="grid"]');
+                if (btn) btn.classList.toggle('active', this.showGrid);
+                this._requestRedraw();
+            }
+
+            _toggleFullscreen() {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                } else if (this.viewportContainer.requestFullscreen) {
+                    this.viewportContainer.requestFullscreen();
+                } else {
+                    alert('当前浏览器不支持全屏预览');
                 }
-                if (e.key === 'ArrowUp') {
-                    const layer = this.comp.getSelectedLayer();
-                    if (layer) this.comp.moveLayerUp(layer.id);
-                    e.preventDefault();
-                    this._updateLayerStack(); this._requestRedraw();
+            }
+
+            _setZoom(v) {
+                if (v === 'fit') this.zoomMode = 'fit';
+                else {
+                    const n = parseFloat(v);
+                    if (isNaN(n)) return;
+                    this.zoomMode = String(n);
                 }
-                if (e.key === 'ArrowDown') {
-                    const layer = this.comp.getSelectedLayer();
-                    if (layer) this.comp.moveLayerDown(layer.id);
-                    e.preventDefault();
-                    this._updateLayerStack(); this._requestRedraw();
+                const presets = ['fit', '2', '1', '0.5', '0.25'];
+                this.canvasZoomEl.value = presets.indexOf(String(v)) >= 0 ? String(v) : 'fit';
+                this._applyZoom();
+                this._requestRedraw();
+            }
+
+            // ---------- 对齐 / 分布 ----------
+            _initAlignEvents() {
+                document.querySelectorAll('[data-align]').forEach(btn => {
+                    btn.addEventListener('click', () => this._alignLayers(btn.dataset.align));
+                });
+                document.querySelectorAll('[data-tzoom]').forEach(sp => {
+                    sp.addEventListener('click', () => {
+                        const step = CONFIG.PIXELS_PER_SECOND * 0.25;
+                        const v = this.timeline.pixelsPerSecond + (sp.dataset.tzoom === 'in' ? step : -step);
+                        this._setTimelineZoom(v);
+                    });
+                });
+            }
+
+            _setTimelineZoom(v) {
+                this.timeline.pixelsPerSecond = clamp(v, 20, 2000);
+                const slider = document.getElementById('timeline-zoom-slider');
+                if (slider) slider.value = Math.round(clamp(this.timeline.pixelsPerSecond / CONFIG.PIXELS_PER_SECOND * 100, 20, 200));
+                this.timeline.needsRedraw = true;
+                this._updatePlayheadPosition();
+            }
+
+            _alignLayers(mode) {
+                const c = this.comp;
+                if (mode === 'hdist' || mode === 'vdist') {
+                    const key = mode === 'hdist' ? 'x' : 'y';
+                    const arr = c.layers.filter(l => !l.locked).sort((a, b) => a[key] - b[key]);
+                    if (arr.length < 3) { alert('分布操作至少需要 3 个未锁定图层'); return; }
+                    this._pushHistory();
+                    const first = arr[0][key], last = arr[arr.length - 1][key];
+                    const gap = (last - first) / (arr.length - 1);
+                    arr.forEach((l, i) => l.setProp(key, first + gap * i, c.currentTime));
+                    this._afterHistory();
+                    return;
                 }
+                const layer = c.getSelectedLayer();
+                if (!layer) { alert('请先选择一个图层'); return; }
+                if (layer.locked) { alert('图层已锁定'); return; }
+                this._pushHistory();
+                const t = c.currentTime;
+                if (mode === 'left') layer.setProp('x', layer.width / 2, t);
+                else if (mode === 'hcenter') layer.setProp('x', c.width / 2, t);
+                else if (mode === 'right') layer.setProp('x', c.width - layer.width / 2, t);
+                else if (mode === 'top') layer.setProp('y', layer.height / 2, t);
+                else if (mode === 'vcenter') layer.setProp('y', c.height / 2, t);
+                else if (mode === 'bottom') layer.setProp('y', c.height - layer.height / 2, t);
+                this._afterHistory();
             }
 
             // ---- 导入媒体 ----
