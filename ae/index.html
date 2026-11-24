@@ -440,6 +440,16 @@
         #timeline-controls .loop-toggle.on {
             color: var(--accent);
         }
+        #timeline-controls .kf-btn {
+            color: var(--keyframe, #ffd700);
+            font-size: 13px;
+            border: 1px solid var(--border);
+            margin-left: 4px;
+        }
+        #timeline-controls .kf-btn:hover {
+            background: rgba(255,215,0,0.12);
+            border-color: var(--keyframe, #ffd700);
+        }
         #timeline-controls .export-btn {
             background: var(--accent);
             color: #fff;
@@ -864,6 +874,13 @@
         .stopwatch.on { background: var(--accent); border-color: var(--accent); color: #11111b; }
         .kf-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--keyframe); opacity: 0; }
         .kf-dot.visible { opacity: 1; }
+        .kf-toggle {
+            width: 14px; height: 14px; display: inline-flex; align-items: center; justify-content: center;
+            font-size: 11px; color: var(--text-dim); cursor: pointer; flex-shrink: 0; border-radius: 2px;
+            line-height: 1;
+        }
+        .kf-toggle:hover { background: rgba(255,215,0,0.14); color: var(--keyframe, #ffd700); }
+        .kf-toggle.has-kf { color: var(--keyframe, #ffd700); }
 
         /* ---- 效果卡片 ---- */
         .fx-card {
@@ -1097,6 +1114,7 @@
                 <span class="time-display" id="time-display">00:00</span>
                 <span class="transport-label" id="fps-label">30 fps</span>
                 <span class="loop-toggle" id="loop-toggle" title="循环播放">⟳</span>
+                <button class="play-btn kf-btn" id="keyframe-btn" title="在当前时间添加/删除关键帧 (K)">◆</button>
                 <button class="export-btn" id="export-btn">📤 导出 WebM</button>
                 <div class="timeline-zoom">
                     <span data-tzoom="out" title="缩小时间轴">−</span>
@@ -2483,6 +2501,7 @@
                     }
                 });
                 this.exportBtn.addEventListener('click', () => this._exportWebM());
+                document.getElementById('keyframe-btn').addEventListener('click', () => this._toggleKeyframeAll());
 
                 this.layerStackEl.addEventListener('click', e => this._onLayerStackClick(e));
                 this.inspectorContentEl.addEventListener('click', e => this._onInspectorClick(e));
@@ -2769,12 +2788,13 @@
                         const unit = pct ? '%' : (prop === 'rotation' ? '°' : '');
                         const on = layer.isAnimated(prop);
                         const step = prop === 'rotation' ? 0.5 : 1;
+                        const kfst = this._kfState(layer.properties[PROP_MAP[prop][0]], time);
                         html += '<div class="prop-row">' +
                             '<span class="prop-label">' + PROP_LABELS[prop] + '</span>' +
                             '<input type="number" class="prop-value" data-prop="' + prop + '" value="' + disp + '" step="' + step + '" />' +
                             '<span class="prop-unit">' + unit + '</span>' +
-                            '<span class="stopwatch ' + (on ? 'on' : '') + '" data-act="watch" data-prop="' + prop + '" title="关键帧">⏱</span>' +
-                            '<span class="kf-dot ' + (on ? 'visible' : '') + '"></span>' +
+                            '<span class="stopwatch ' + (on ? 'on' : '') + '" data-act="watch" data-prop="' + prop + '" title="激活动画">⏱</span>' +
+                            '<span class="kf-toggle ' + (kfst.kf ? 'has-kf' : '') + '" data-act="kf" data-prop="' + prop + '" title="' + (kfst.kf ? '删除' : '添加') + '关键帧 (K)">' + kfst.glyph + '</span>' +
                             '</div>';
                     });
                 }
@@ -2805,7 +2825,9 @@
                         const p = fx.params[key];
                         const v = effectParamValue(fx, key, time);
                         const on = p.anim.animated;
-                        const watch = '<span class="stopwatch ' + (on ? 'on' : '') + '" data-act="fx-watch" data-fx="' + index + '" data-param="' + key + '" title="关键帧">⏱</span>';
+                        const kfst = this._kfState(p.anim, time);
+                        const watch = '<span class="stopwatch ' + (on ? 'on' : '') + '" data-act="fx-watch" data-fx="' + index + '" data-param="' + key + '" title="激活动画">⏱</span>' +
+                            '<span class="kf-toggle ' + (kfst.kf ? 'has-kf' : '') + '" data-act="fx-kf" data-fx="' + index + '" data-param="' + key + '" title="' + (kfst.kf ? '删除' : '添加') + '关键帧 (K)">' + kfst.glyph + '</span>';
                         const label = '<span class="p-label" data-act="reset" data-fx="' + index + '" data-param="' + key + '" title="Alt+点击重置">' + p.label + '</span>';
                         if (p.type === 'number') {
                             h += '<div class="fx-param">' + label +
@@ -2848,6 +2870,94 @@
                         if (inp.type === 'range' || inp.type === 'number') inp.value = round1(v);
                     }
                 });
+            }
+
+            /** 菱形按钮状态：某个 AnimatedProperty 在当前时间是否有关键帧 */
+            _kfState(ap, time) {
+                if (!ap || !ap.animated || !ap.keyframes.length) return { kf: false, glyph: '◇' };
+                const has = ap.keyframes.some(k => Math.abs(k.time - time) < 1e-4);
+                return { kf: has, glyph: has ? '◆' : '◇' };
+            }
+
+            /** 在当前时间给某个属性打/删关键帧（菱形按钮） */
+            _toggleKeyframe(ap, time, fallbackValue) {
+                if (!ap) return;
+                if (!ap.animated) ap.animated = true;
+                const idx = ap.keyframes.findIndex(k => Math.abs(k.time - time) < 1e-4);
+                if (idx >= 0) {
+                    const removed = ap.keyframes.splice(idx, 1)[0];
+                    // 删掉最后一帧后把值固化，避免求值跳变
+                    if (!ap.keyframes.length && removed) ap.value = cloneValue(removed.value);
+                } else {
+                    setAnimatedKeyframe(ap, time, ap.keyframes.length ? evaluateProperty(ap, time) : fallbackValue);
+                }
+            }
+
+            _toggleLayerKeyframe(layer, prop) {
+                this._pushHistory();
+                const time = this.comp.currentTime;
+                const m = PROP_MAP[prop];
+                const ap = layer.properties[m[0]];
+                let fallback;
+                if (m[1] === null) fallback = cloneValue(layer.getValue(prop, time));
+                else {
+                    fallback = cloneValue(ap.value);
+                    fallback[m[1]] = layer.getValue(prop, time);
+                }
+                this._toggleKeyframe(ap, time, fallback);
+                this._updateLayerStack();
+                this._updateLayerProperties();
+                this._seekRefresh();
+            }
+
+            _toggleFxKeyframe(fx, key) {
+                this._pushHistory();
+                const ap = fx.keyframes[key];
+                if (!ap) return;
+                this._toggleKeyframe(ap, this.comp.currentTime, cloneValue(ap.value));
+                this._updateLayerStack();
+                this._updateLayerProperties();
+                this._seekRefresh();
+            }
+
+            /** 全局关键帧按钮：对选中图层已激活动画的属性在当前时间打/删关键帧 */
+            _toggleKeyframeAll() {
+                const layer = this.comp.getSelectedLayer();
+                if (!layer) { alert('请先选择一个图层'); return; }
+                this._pushHistory();
+                const time = this.comp.currentTime;
+                const targets = [];
+                Object.keys(layer.properties).forEach(k => {
+                    const ap = layer.properties[k];
+                    if (ap.animated) targets.push({ ap: ap, value: cloneValue(ap.value) });
+                });
+                layer.effects.forEach(fx => Object.keys(fx.keyframes).forEach(k => {
+                    const ap = fx.keyframes[k];
+                    if (ap.animated) targets.push({ ap: ap, value: cloneValue(ap.value) });
+                }));
+                // 没有任何动画属性：默认给位置打第一个关键帧，保证按钮总有反馈
+                if (!targets.length) {
+                    const ap = layer.properties.position;
+                    ap.animated = true;
+                    setAnimatedKeyframe(ap, time, cloneValue(ap.value));
+                } else {
+                    // 若所有目标在当前时间都有关键帧 → 批量删除，否则批量添加
+                    const allHave = targets.every(t => t.ap.keyframes.some(k => Math.abs(k.time - time) < 1e-4));
+                    targets.forEach(t => {
+                        const idx = t.ap.keyframes.findIndex(k => Math.abs(k.time - time) < 1e-4);
+                        if (allHave) {
+                            if (idx >= 0) {
+                                const removed = t.ap.keyframes.splice(idx, 1)[0];
+                                if (!t.ap.keyframes.length && removed) t.ap.value = cloneValue(removed.value);
+                            }
+                        } else if (idx < 0) {
+                            setAnimatedKeyframe(t.ap, time, evaluateProperty(t.ap, time));
+                        }
+                    });
+                }
+                this._updateLayerStack();
+                this._updateLayerProperties();
+                this._seekRefresh();
             }
 
             _togglePropWatch(layer, prop) {
@@ -2915,6 +3025,15 @@
                 }
                 if (act === 'watch') {
                     this._togglePropWatch(layer, e.target.dataset.prop);
+                    return;
+                }
+                if (act === 'kf') {
+                    this._toggleLayerKeyframe(layer, e.target.dataset.prop);
+                    return;
+                }
+                if (act === 'fx-kf') {
+                    const fx = layer.effects[parseInt(e.target.dataset.fx)];
+                    if (fx) this._toggleFxKeyframe(fx, e.target.dataset.param);
                     return;
                 }
                 if (act === 'fx-fold') {
@@ -3450,6 +3569,7 @@
                 if (e.key === 'End') { e.preventDefault(); this._runCommand('end'); return; }
                 if (k === 'v') { this._setTool('select'); return; }
                 if (k === 'h') { this._setTool('pan'); return; }
+                if (k === 'k') { this._toggleKeyframeAll(); return; }
             }
 
 
@@ -3658,7 +3778,8 @@
                     ['Ctrl + D', '复制图层'], ['Delete', '删除图层'], ['↑ / ↓', '上移 / 下移图层'],
                     ['← / →', '上一帧 / 下一帧'], ['Home / End', '跳到开头 / 结尾'],
                     ['V / H', '选择工具 / 平移工具'], ['空格 + 拖拽', '平移画布'],
-                    ['Ctrl + 滚轮', '缩放画布 / 时间轴'], ['Alt + 点击参数名', '重置效果参数'],
+                    ['K', '在当前时间添加/删除关键帧'], ['Ctrl + 滚轮', '缩放画布 / 时间轴'],
+                    ['Alt + 点击参数名', '重置效果参数'],
                     ['Esc', '关闭菜单 / 弹窗'],
                 ];
                 this._showModal('快捷键',
